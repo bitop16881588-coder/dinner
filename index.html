@@ -1,75 +1,120 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聚餐点餐统计器</title>
+    <title>聚餐點餐統計</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
-        .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .info { flex: 1; }
-        .name { font-weight: bold; font-size: 16px; }
-        .price { color: #e91e63; font-size: 14px; }
-        .num-control { display: flex; align-items: center; }
-        button { background: #007bff; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; }
-        input { width: 40px; text-align: center; border: 1px solid #ddd; margin: 0 5px; }
-        #total-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #333; color: white; padding: 20px; display: flex; justify-content: space-between; }
+        body { font-family: -apple-system, sans-serif; background: #f4f7f6; padding: 20px; margin: 0; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #005088; }
+        .input-group { margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .menu-section { border-top: 1px solid #eee; padding-top: 15px; }
+        .food-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .food-info { flex: 1; }
+        .food-name { font-weight: 500; }
+        .food-price { color: #888; font-size: 14px; }
+        .stepper { display: flex; align-items: center; }
+        .stepper button { background: #005088; color: white; border: none; width: 30px; height: 30px; border-radius: 15px; cursor: pointer; font-size: 18px; }
+        .stepper input { width: 40px; text-align: center; border: none; font-size: 16px; }
+        #summary-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #333; color: white; padding: 20px; text-align: center; }
+        #copy-btn { background: #11caa0; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; margin-top: 10px; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h2 style="text-align: center;">🍲 我们的聚餐菜单</h2>
-    <div id="menu-list"></div>
-    <div style="height: 80px;"></div> <div id="total-bar">
-        <div>总计: ￥<span id="total-price">0</span></div>
-        <div>人均: ￥<span id="avg-price">0</span></div>
+
+<div class="container">
+    <h2>🍲 點餐統計表</h2>
+    
+    <div class="input-group">
+        <label>您的姓名：</label>
+        <input type="text" id="user-name" placeholder="請輸入姓名">
     </div>
 
-    <script>
-        // 已经帮你把照片里的菜单全部写进去了
-        const foods = [
-            {n: "牛骨汤底+牛肉", p: 450}, {n: "鸳鸯锅(牛/猪)", p: 650},
-            {n: "蔬菜汤底+猪肉", p: 300}, {n: "牛肉盘", p: 300},
-            {n: "猪肉盘", p: 150}, {n: "牛腩肉角盘", p: 250},
-            {n: "牛腩肉筋盘", p: 250}, {n: "沙茶牛/肚", p: 180},
-            {n: "麻油心/肝", p: 200}, {n: "清炒时蔬", p: 60},
-            {n: "台啤", p: 60}, {n: "汽水", p: 40}
-        ];
+    <div class="menu-section" id="menu-list">
+        </div>
 
-        let cart = {};
-        const list = document.getElementById('menu-list');
+    <div style="height: 120px;"></div> </div>
 
-        function update() {
-            let total = 0;
-            let count = 0;
-            for (let id in cart) {
-                total += cart[id] * foods[id].p;
-                count += cart[id] > 0 ? 1 : 0; // 简单假设有几个人点餐
+<div id="summary-bar">
+    <div>總計金額：$<span id="total-price">0</span></div>
+    <button id="copy-btn" onclick="copyResult()">點擊複製點餐內容</button>
+</div>
+
+<script>
+    // 根據你照片錄入的完整菜單
+    const menu = [
+        { name: "牛骨湯底+牛肉一份", price: 450 },
+        { name: "鴛鴦鍋 (牛/豬)", price: 650 },
+        { name: "牛肉盤", price: 300 },
+        { name: "豬肉盤", price: 150 },
+        { name: "牛腩肉角盤", price: 250 },
+        { name: "牛腩肉筋盤", price: 250 },
+        { name: "沙茶牛/肚", price: 180 },
+        { name: "麻油心/肝", price: 200 },
+        { name: "清炒時蔬", price: 60 },
+        { name: "台啤", price: 60 },
+        { name: "蘋果西打", price: 40 }
+    ];
+
+    let selections = {};
+
+    const list = document.getElementById('menu-list');
+    menu.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'food-item';
+        div.innerHTML = `
+            <div class="food-info">
+                <div class="food-name">${item.name}</div>
+                <div class="food-price">$${item.price}</div>
+            </div>
+            <div class="stepper">
+                <button onclick="change(${index}, -1)">-</button>
+                <input type="number" id="qty-${index}" value="0" readonly>
+                <button onclick="change(${index}, 1)">+</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+
+    function change(index, delta) {
+        let current = selections[index] || 0;
+        current = Math.max(0, current + delta);
+        selections[index] = current;
+        document.getElementById(`qty-${index}`).value = current;
+        updateTotal();
+    }
+
+    function updateTotal() {
+        let total = 0;
+        for (let i in selections) {
+            total += selections[i] * menu[i].price;
+        }
+        document.getElementById('total-price').innerText = total;
+    }
+
+    function copyResult() {
+        const name = document.getElementById('user-name').value;
+        if (!name) return alert("請先輸入姓名！");
+        
+        let detail = `【聚餐點餐】\n姓名：${name}\n`;
+        let total = 0;
+        for (let i in selections) {
+            if (selections[i] > 0) {
+                detail += `- ${menu[i].name} x ${selections[i]}\n`;
+                total += selections[i] * menu[i].price;
             }
-            document.getElementById('total-price').innerText = total;
-            document.getElementById('avg-price').innerText = count ? (total / count).toFixed(1) : 0;
         }
+        detail += `總金額：$${total}`;
+        
+        if (total === 0) return alert("請至少選擇一項餐點！");
 
-        foods.forEach((f, i) => {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div class="info"><div class="name">${f.n}</div><div class="price">￥${f.p}</div></div>
-                <div class="num-control">
-                    <button onclick="change(${i},-1)">-</button>
-                    <input type="number" id="num-${i}" value="0" readonly>
-                    <button onclick="change(${i},1)">+</button>
-                </div>
-            `;
-            list.appendChild(div);
+        navigator.clipboard.writeText(detail).then(() => {
+            alert("已複製點餐清單！請直接貼到群組裡。");
         });
+    }
+</script>
 
-        window.change = (i, d) => {
-            let val = (cart[i] || 0) + d;
-            if (val < 0) val = 0;
-            cart[i] = val;
-            document.getElementById('num-'+i).value = val;
-            update();
-        }
-    </script>
 </body>
 </html>
