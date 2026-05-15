@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聚餐点餐统计器</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+        .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .info { flex: 1; }
+        .name { font-weight: bold; font-size: 16px; }
+        .price { color: #e91e63; font-size: 14px; }
+        .num-control { display: flex; align-items: center; }
+        button { background: #007bff; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; }
+        input { width: 40px; text-align: center; border: 1px solid #ddd; margin: 0 5px; }
+        #total-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #333; color: white; padding: 20px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">🍲 我们的聚餐菜单</h2>
+    <div id="menu-list"></div>
+    <div style="height: 80px;"></div> <div id="total-bar">
+        <div>总计: ￥<span id="total-price">0</span></div>
+        <div>人均: ￥<span id="avg-price">0</span></div>
+    </div>
+
+    <script>
+        // 已经帮你把照片里的菜单全部写进去了
+        const foods = [
+            {n: "牛骨汤底+牛肉", p: 450}, {n: "鸳鸯锅(牛/猪)", p: 650},
+            {n: "蔬菜汤底+猪肉", p: 300}, {n: "牛肉盘", p: 300},
+            {n: "猪肉盘", p: 150}, {n: "牛腩肉角盘", p: 250},
+            {n: "牛腩肉筋盘", p: 250}, {n: "沙茶牛/肚", p: 180},
+            {n: "麻油心/肝", p: 200}, {n: "清炒时蔬", p: 60},
+            {n: "台啤", p: 60}, {n: "汽水", p: 40}
+        ];
+
+        let cart = {};
+        const list = document.getElementById('menu-list');
+
+        function update() {
+            let total = 0;
+            let count = 0;
+            for (let id in cart) {
+                total += cart[id] * foods[id].p;
+                count += cart[id] > 0 ? 1 : 0; // 简单假设有几个人点餐
+            }
+            document.getElementById('total-price').innerText = total;
+            document.getElementById('avg-price').innerText = count ? (total / count).toFixed(1) : 0;
+        }
+
+        foods.forEach((f, i) => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <div class="info"><div class="name">${f.n}</div><div class="price">￥${f.p}</div></div>
+                <div class="num-control">
+                    <button onclick="change(${i},-1)">-</button>
+                    <input type="number" id="num-${i}" value="0" readonly>
+                    <button onclick="change(${i},1)">+</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+
+        window.change = (i, d) => {
+            let val = (cart[i] || 0) + d;
+            if (val < 0) val = 0;
+            cart[i] = val;
+            document.getElementById('num-'+i).value = val;
+            update();
+        }
+    </script>
+</body>
+</html>
