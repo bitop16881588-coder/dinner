@@ -7,8 +7,9 @@
     <style>
         body { font-family: -apple-system, sans-serif; background: #f4f7f6; padding: 15px; margin: 0; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 120px; }
-        .input-group { margin-bottom: 20px; }
-        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .input-group { margin-bottom: 15px; }
+        label { font-weight:bold; display: block; margin-bottom: 5px; }
+        input[type="text"], select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .food-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
         .food-name { font-weight: 500; }
         .food-price { color: #888; font-size: 14px; }
@@ -23,12 +24,30 @@
 
 <div class="container">
     <h2 style="text-align:center;">🍲 點餐統計表</h2>
+    
     <div class="input-group">
-        <label style="font-weight:bold;">您的姓名：</label>
+        <label>您的姓名：</label>
         <input type="text" id="user-name" placeholder="請輸入姓名">
     </div>
-    <div id="menu-list">
-        </div>
+
+    <div class="input-group">
+        <label>桌號：</label>
+        <select id="table-num">
+            <option value="">請選擇桌號</option>
+            <option value="1號桌">1號桌</option>
+            <option value="2號桌">2號桌</option>
+            <option value="3號桌">3號桌</option>
+            <option value="4號桌">4號桌</option>
+            <option value="5號桌">5號桌</option>
+            <option value="6號桌">6號桌</option>
+            <option value="7號桌">7號桌</option>
+            <option value="8號桌">8號桌</option>
+            <option value="9號桌">9號桌</option>
+            <option value="10號桌">10號桌</option>
+        </select>
+    </div>
+
+    <div id="menu-list"></div>
 </div>
 
 <div id="footer">
@@ -45,6 +64,7 @@
         { name: "豬肉盤", price: 150 }, { name: "牛腩肉角盤", price: 250 },
         { name: "牛腩肉筋盤", price: 250 }, { name: "牛肉湯", price: 130 },
         { name: "牛牛飯", price: 40 }, { name: "白飯", price: 15 },
+        { name: "自助菜盤-大", price: 100 }, { name: "自助菜盤-中", price: 60 },
         { name: "蔥爆牛/蔥爆肚", price: 180 }, { name: "沙茶牛/沙茶肚", price: 180 },
         { name: "麻油心/麻油肝", price: 200 }, { name: "清炒時蔬", price: 60 },
         { name: "台啤", price: 60 }, { name: "汽水/礦泉水", price: 40 }, { name: "茶類/果汁", price: 60 }
@@ -53,7 +73,6 @@
     let selections = {};
     const list = document.getElementById('menu-list');
 
-    // 生成網頁上的菜單列表
     menu.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'food-item';
@@ -84,7 +103,9 @@
 
     async function submitOrder() {
         const name = document.getElementById('user-name').value.trim();
+        const table = document.getElementById('table-num').value;
         if (!name) return alert("請輸入姓名！");
+        if (!table) return alert("請選擇桌號！");
         
         let details = "";
         let total = 0;
@@ -101,15 +122,16 @@
         btn.disabled = true;
 
         try {
+            // 這裡會把 姓名、桌號、內容、總金額 一起傳過去
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({ name: name, details: details, total: total })
+                body: JSON.stringify({ name: name, table: table, details: details, total: total })
             });
-            alert("提交成功！請查看 Google 表格");
+            alert("提交成功！");
             location.reload();
         } catch (e) {
-            alert("提交出錯，請檢查網路");
+            alert("提交失敗");
             btn.disabled = false;
             btn.innerText = "確認下單並提交";
         }
