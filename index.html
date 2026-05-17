@@ -100,4 +100,132 @@
         { category: "✨ 主食湯底與肉盤", cols: 1, items: [
             { name: "牛骨湯底+牛肉一份", price: 450 }, { name: "鴛鴦鍋 (牛肉、豬肉)", price: 650 },
             { name: "蔬菜湯底+豬肉一份", price: 300 }, { name: "牛肉盤", price: 300 },
-            { name: "豬肉盤", price: 150 },
+            { name: "豬肉盤", price: 150 }, { name: "牛腩肉角盤", price: 250 },
+            { name: "牛腩肉筋盤", price: 250 }, { name: "牛肉湯", price: 130 },
+            { name: "牛牛飯", price: 40 }, { name: "白飯", price: 15 },
+            { name: "自助菜盤-大", price: 100 }, { name: "自助菜盤-中", price: 60 }
+        ]},
+        { category: "🔥 熱炒料理", cols: 2, items: [
+            { name: "蔥爆牛", price: 180 }, { name: "蔥爆肚", price: 180 },
+            { name: "沙茶牛", price: 180 }, { name: "沙茶肚", price: 180 },
+            { name: "沙茶肝", price: 180 }, { name: "沙茶髓", price: 180 }
+        ]},
+        { category: "🍳 麻油料理", cols: 2, items: [
+            { name: "麻油心", price: 200 }, { name: "麻油肝", price: 200 },
+            { name: "麻油牛", price: 200 }, { name: "麻油麵", price: 200 }
+        ]},
+        { category: "🥤 時蔬與水酒", cols: 1, items: [
+            { name: "清炒時蔬", price: 60 }, { name: "台啤", price: 60 },
+            { name: "金牌、小海", price: 70 }, { name: "海尼根、百威", price: 100 },
+            { name: "汽水、礦泉水", price: 40 }, { name: "茶類、果汁", price: 60 },
+            { name: "石蓮花", price: 100 }
+        ]}
+    ];
+
+    let selections = {};
+    let flatMenu = [];
+    const menuContainer = document.getElementById('menu-container');
+    let globalIndex = 0;
+
+    menuData.forEach(cat => {
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'category-title';
+        titleDiv.innerText = cat.category;
+        menuContainer.appendChild(titleDiv);
+
+        const gridDiv = document.createElement('div');
+        gridDiv.className = 'menu-grid' + (cat.cols === 2 ? ' two-cols' : '');
+
+        cat.items.forEach(item => {
+            flatMenu.push(item);
+            const currentIdx = globalIndex;
+            const card = document.createElement('div');
+            card.className = 'food-card';
+            card.innerHTML = '<div><div class="food-name">' + item.name + '</div><div class="food-price">$' + item.price + '</div></div><div class="stepper"><button onclick="change(' + currentIdx + ',-1)">-</button><input type="number" id="qty-' + currentIdx + '" value="0" readonly><button onclick="change(' + currentIdx + ',1)">+</button></div>';
+            gridDiv.appendChild(card);
+            globalIndex++;
+        });
+        menuContainer.appendChild(gridDiv);
+    });
+
+    window.switchPage = function(pageId, tabElement) {
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(pageId).style.display = 'block';
+        tabElement.classList.add('active');
+    };
+
+    window.change = function(index, delta) {
+        let current = selections[index] || 0;
+        current = Math.max(0, current + delta);
+        selections[index] = current;
+        document.getElementById('qty-' + index).value = current;
+        updateTotal();
+    };
+
+    function updateTotal() {
+        let total = 0;
+        for (let i in selections) { total += selections[i] * flatMenu[i].price; }
+        document.getElementById('total-price').innerText = total;
+    }
+
+    async function submitOrder() {
+        const name = document.getElementById('user-name').value.trim();
+        const table = document.getElementById('table-num').value;
+        if (!table || !name) return alert("請輸入姓名並選擇桌號！");
+        
+        let details = "";
+        let total = 0;
+        for (let i in selections) {
+            if (selections[i] > 0) {
+                details += flatMenu[i].name + "x" + selections[i] + " ";
+                total += selections[i] * flatMenu[i].price;
+            }
+        }
+        if (total === 0) return alert("請先選餐！");
+
+        const btn = document.getElementById('submit-btn');
+        btn.innerText = "提交中..."; btn.disabled = true;
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name: name, table: table, details: details, total: total }) });
+            alert("提交成功！"); location.reload();
+        } catch (e) {
+            alert("提交失敗"); btn.disabled = false; btn.innerText = "確認下單並提交";
+        }
+    }
+
+    async function fetchRecords() {
+        const listDiv = document.getElementById('records-list');
+        const loadingDiv = document.getElementById('loading');
+        loadingDiv.style.display = "block"; listDiv.innerHTML = "";
+
+        try {
+            const response = await fetch(SCRIPT_URL + "?action=read");
+            const data = await response.json();
+            loadingDiv.style.display = "none";
+            if(!data || data.length === 0) { listDiv.innerHTML = "<div style='text-align:center;color:#a8968a;'>目前還沒有人點餐喔！</div>"; return; }
+
+            data.sort((a, b) => (parseInt(a.table) || 0) - (parseInt(b.table) || 0));
+            let currentTable = "", tableTotal = 0, htmlHTML = "";
+
+            data.forEach((r, idx) => {
+                if (currentTable !== "" && currentTable !== r.table) {
+                    htmlHTML += '<div class="table-total-card"><span>🍵 ' + currentTable + ' 總計</span><span>$' + tableTotal + '</span></div>';
+                    tableTotal = 0;
+                }
+                currentTable = r.table; tableTotal += parseInt(r.total) || 0;
+                htmlHTML += '<div class="record-card"><div class="record-header"><span>' + r.table + ' - ' + r.name + '</span><span style="color:#c97a63;">$' + r.total + '</span></div><div style="font-size:14px;color:#7a6b62;line-height:1.4;">' + r.details + '</div></div>';
+                if (idx === data.length - 1) {
+                    htmlHTML += '<div class="table-total-card"><span>🍵 ' + currentTable + ' 總計</span><span>$' + tableTotal + '</span></div>';
+                }
+            });
+            listDiv.innerHTML = htmlHTML;
+        } catch (e) {
+            loadingDiv.style.display = "none";
+            listDiv.innerHTML = "<div style='text-align:center;color:#c97a63;'>無法讀取匯總</div>";
+        }
+    }
+</script>
+</body>
+</html>
