@@ -85,7 +85,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
 
-    // 依據照片重新整理的結構化菜單，熱炒細項完全分開
+    // 依據照片全新整理的結構化菜單
     const menuData = [
         { category: "主食湯底與肉盤", cols: 1, items: [
             { name: "牛骨湯底+牛肉一份", price: 450 },
@@ -101,12 +101,12 @@
             { name: "自助菜盤-大", price: 100 },
             { name: "自助菜盤-中", price: 60 }
         ]},
-        { category: "熱炒料理 (已全部分開)", cols: 2, items: [
+        { category: "熱炒料理", cols: 2, items: [
             { name: "蔥爆牛", price: 180 }, { name: "蔥爆肚", price: 180 },
             { name: "沙茶牛", price: 180 }, { name: "沙茶肚", price: 180 },
             { name: "沙茶肝", price: 180 }, { name: "沙茶髓", price: 180 }
         ]},
-        { category: "麻油料理 (已全部分開)", cols: 2, items: [
+        { category: "麻油料理", cols: 2, items: [
             { name: "麻油心", price: 200 }, { name: "麻油肝", price: 200 },
             { name: "麻油牛", price: 200 }, { name: "麻油麵", price: 200 }
         ]},
@@ -122,7 +122,7 @@
     ];
 
     let selections = {};
-    let flatMenu = []; // 扁平化陣列方便索引計算
+    let flatMenu = []; // 把所有品項攤平，對應唯一的全域 index
     
     // 生成並渲染菜單
     const menuContainer = document.getElementById('menu-container');
@@ -139,6 +139,8 @@
 
         cat.items.forEach(item => {
             flatMenu.push(item);
+            const currentIdx = globalIndex; // 固定當前的 index 給事件使用
+            
             const card = document.createElement('div');
             card.className = 'food-card';
             card.innerHTML = `
@@ -147,9 +149,9 @@
                     <div class="food-price">$${item.price}</div>
                 </div>
                 <div class="stepper">
-                    <button onclick="change(${globalIndex}, -1)">-</button>
-                    <input type="number" id="qty-${globalIndex}" value="0" readonly>
-                    <button onclick="change(${globalIndex}, 1)">+</button>
+                    <button onclick="change(${currentIdx}, -1)">-</button>
+                    <input type="number" id="qty-${currentIdx}" value="0" readonly>
+                    <button onclick="change(${currentIdx}, 1)">+</button>
                 </div>
             `;
             gridDiv.appendChild(card);
@@ -218,49 +220,4 @@
         const listDiv = document.getElementById('records-list');
         const loadingDiv = document.getElementById('loading');
         loadingDiv.style.display = "block";
-        listDiv.innerHTML = "";
-
-        try {
-            const response = await fetch(SCRIPT_URL + "?action=read");
-            const data = await response.json();
-            loadingDiv.style.display = "none";
-
-            if(data.length === 0) {
-                listDiv.innerHTML = "<div style='text-align:center;color:#888;'>目前還沒有人點餐喔！</div>";
-                return;
-            }
-
-            data.sort((a, b) => (parseInt(a.table) || 0) - (parseInt(b.table) || 0));
-
-            let currentTable = "";
-            let tableTotal = 0;
-            let htmlHTML = "";
-
-            data.forEach((r, idx) => {
-                if (currentTable !== "" && currentTable !== r.table) {
-                    htmlHTML += `<div class="table-total-card"><span>💰 ${currentTable} 小計</span><span>$${tableTotal}</span></div>`;
-                    tableTotal = 0;
-                }
-                currentTable = r.table;
-                tableTotal += parseInt(r.total) || 0;
-
-                htmlHTML += `
-                    <div class="record-card">
-                        <div class="record-header"><span>${r.table} - ${r.name}</span><span style="color:#e91e63;">$${r.total}</span></div>
-                        <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}</div>
-                    </div>
-                `;
-
-                if (idx === data.length - 1) {
-                    htmlHTML += `<div class="table-total-card"><span>💰 ${currentTable} 小計</span><span>$${tableTotal}</span></div>`;
-                }
-            });
-            listDiv.innerHTML = htmlHTML;
-        } catch (e) {
-            loadingDiv.style.display = "none";
-            listDiv.innerHTML = "<div style='text-align:center;color:red;'>無法讀取匯總，請確認 Google 後台已開啟讀取功能。</div>";
-        }
-    }
-</script>
-</body>
-</html>
+        listDiv.innerHTML =
