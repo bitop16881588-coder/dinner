@@ -5,52 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>聚餐點餐統計</title>
     <style>
-        /* 藍色系核心配色 */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f4f8; color: #2c3e50; padding: 0; margin: 0; }
+        /* 藍色系核心配色 + 全域Q版可愛字體 */
+        body { 
+            font-family: "Xingstream", "Comic Sans MS", "Chalkboard SE", "Yuanti SC", "華康少女文字", "Microsoft JhengHei", sans-serif; 
+            background: #f0f4f8; 
+            color: #2c3e50; 
+            padding: 0; 
+            margin: 0; 
+        }
         
         /* 頂部導覽列：霧藍色 */
         .tabs { display: flex; background: #dbe4ee; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(44, 62, 80, 0.05); }
-        .tab { flex: 1; text-align: center; padding: 16px 0; color: #607d8b; font-weight: bold; cursor: pointer; opacity: 0.8; font-size: 15px; transition: all 0.3s; }
-        .tab.active { opacity: 1; color: #1e3a8a; border-bottom: 4px solid #4a90e2; background: rgba(255,255,255,0.5); }
+        .tab { flex: 1; text-align: center; padding: 16px 0; color: #607d8b; font-weight: bold; cursor: pointer; opacity: 0.8; font-size: 16px; transition: all 0.3s; }
+        .tab.active { opacity: 1; color: #1e3a8a; border-bottom: 4px solid #4a90e2; background: rgba(255,255,255,0.5); font-size: 17px; }
         
         .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 150px; box-sizing: border-box; }
         .page { display: none; }
         .page.active { display: block; }
         
-        /* 輸入框區塊：純淨白搭配淡藍框 */
-        .input-group { margin-bottom: 16px; background: #ffffff; padding: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.03); border: 1px solid #e1e8f0; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #34495e; font-size: 15px; }
-        input[type="text"], select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 12px; box-sizing: border-box; font-size: 16px; color: #2c3e50; background-color: #f8fafc; transition: all 0.3s; }
-        input[type="text"]:focus, select:focus { outline: none; border-color: #4a90e2; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1); }
+        /* 輸入框區塊：純淨白搭配大圓角 */
+        .input-group { margin-bottom: 16px; background: #ffffff; padding: 16px; border-radius: 20px; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.03); border: 2px solid #e1e8f0; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #34495e; font-size: 16px; }
+        input[type="text"], select { width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 14px; box-sizing: border-box; font-size: 16px; color: #2c3e50; background-color: #f8fafc; font-family: inherit; }
+        input[type="text"]:focus, select:focus { outline: none; border-color: #4a90e2; background-color: #ffffff; }
         
         /* 類別標題：淡淡天藍色 */
-        .category-title { background: #e2eaf4; color: #2c3e50; padding: 8px 14px; border-radius: 10px; font-weight: bold; margin: 24px 0 12px 0; font-size: 15px; letter-spacing: 1px; border-left: 4px solid #4a90e2; }
+        .category-title { background: #e2eaf4; color: #1e3a8a; padding: 10px 16px; border-radius: 14px; font-weight: bold; margin: 24px 0 12px 0; font-size: 16px; border-left: 5px solid #4a90e2; }
         
         /* 菜單網格 */
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
         .menu-grid.two-cols { grid-template-columns: 1fr 1fr; }
         
-        /* 菜單卡片 */
-        .food-card { background: #ffffff; padding: 14px; border-radius: 16px; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.03); display: flex; justify-content: space-between; align-items: center; border: 1px solid #e1e8f0; }
-        .food-name { font-weight: 600; font-size: 15px; color: #2c3e50; }
+        /* 菜單卡片：超圓角設計 */
+        .food-card { background: #ffffff; padding: 14px; border-radius: 20px; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.03); display: flex; justify-content: space-between; align-items: center; border: 2px solid #e1e8f0; box-sizing: border-box; }
+        .food-name { font-weight: bold; font-size: 15px; color: #2c3e50; }
         .food-price { color: #7f8c8d; font-size: 13px; margin-top: 4px; font-weight: bold; }
         
-        /* 加減按鈕：沉穩舒適藍 */
+        /* 加減按鈕：圓滾滾設計 */
         .stepper { display: flex; align-items: center; }
-        .stepper button { background: #4a90e2; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .stepper button { background: #4a90e2; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
         .stepper button:active { background: #357abd; }
-        .stepper input { width: 32px; text-align: center; border: none; font-size: 16px; color: #2c3e50; font-weight: bold; background: transparent; }
+        .stepper input { width: 32px; text-align: center; border: none; font-size: 16px; color: #2c3e50; font-weight: bold; background: transparent; font-family: inherit; }
         
         /* 統計明細卡片 */
-        .record-card { background: #ffffff; padding: 16px; border-radius: 16px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.03); border: 1px solid #e1e8f0; }
-        .record-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px; color: #2c3e50; font-size: 15px; }
+        .record-card { background: #ffffff; padding: 16px; border-radius: 20px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.03); border: 2px solid #e1e8f0; }
+        .record-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 2px dashed #f1f5f9; padding-bottom: 10px; margin-bottom: 10px; color: #2c3e50; font-size: 16px; }
         
-        /* 桌總計卡片：淡淡水藍色點綴 */
-        .table-total-card { background: #eaf2f9; padding: 14px 16px; border-radius: 14px; margin-bottom: 24px; border: 1px dashed #adc6df; display: flex; justify-content: space-between; font-weight: bold; color: #29527a; font-size: 16px; }
+        /* 桌總計卡片：虛線水藍色 */
+        .table-total-card { background: #eaf2f9; padding: 14px 16px; border-radius: 16px; margin-bottom: 24px; border: 2px dashed #adc6df; display: flex; justify-content: space-between; font-weight: bold; color: #29527a; font-size: 17px; }
         
         /* 底部結帳欄 */
-        #footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); padding: 16px 20px; border-top: 1px solid #e1e8f0; text-align: center; box-shadow: 0 -4px 20px rgba(44, 62, 80, 0.05); }
-        #submit-btn { background: #4a90e2; color: white; border: none; padding: 14px; border-radius: 14px; font-weight: bold; font-size: 18px; width: 100%; cursor: pointer; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); transition: background 0.2s; }
+        #footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); padding: 16px 20px; border-top: 2px solid #e1e8f0; text-align: center; }
+        #submit-btn { background: #4a90e2; color: white; border: none; padding: 14px; border-radius: 16px; font-weight: bold; font-size: 18px; width: 100%; cursor: pointer; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2); font-family: inherit; }
         #submit-btn:active { background: #357abd; }
     </style>
 </head>
@@ -64,7 +70,7 @@
 <div class="container">
     <div id="page-menu" class="page active">
         <div class="input-group">
-            <label>桌號 (必選)</label>
+            <label>桌號 (必選) 🌟</label>
             <select id="table-num">
                 <option value="">-- 請選擇桌號 --</option>
                 <option value="1號桌">1號桌</option><option value="2號桌">2號桌</option><option value="3號桌">3號桌</option>
@@ -74,15 +80,15 @@
             </select>
         </div>
         <div class="input-group">
-            <label>您的姓名</label>
+            <label>您的姓名 ✏️</label>
             <input type="text" id="user-name" placeholder="請輸入姓名">
         </div>
         
         <div id="menu-container"></div>
 
         <div id="footer">
-            <div style="margin-bottom:12px; font-size:18px; font-weight:bold; color: #2c3e50;">您的總計：<span style="color: #e74c3c;">$</span><span id="total-price" style="color: #e74c3c;">0</span></div>
-            <button id="submit-btn" onclick="submitOrder()">確認下單並提交</button>
+            <div style="margin-bottom:12px; font-size:19px; font-weight:bold; color: #2c3e50;">您的總計：<span style="color: #e74c3c;">$</span><span id="total-price" style="color: #e74c3c;">0</span></div>
+            <button id="submit-btn" onclick="submitOrder()">確認下單並提交 🚀</button>
         </div>
     </div>
 
@@ -124,33 +130,44 @@
 
     let selections = {};
     let flatMenu = [];
-    const menuContainer = document.getElementById('menu-container');
-    let globalIndex = 0;
+    
+    // 採用最安全的 DOM 注入方式，保證 100% 渲染選單
+    window.addEventListener('DOMContentLoaded', function() {
+        const menuContainer = document.getElementById('menu-container');
+        if (!menuContainer) return;
+        
+        let globalIndex = 0;
+        for (let i = 0; i < menuData.length; i++) {
+            let cat = menuData[i];
+            
+            let titleDiv = document.createElement('div');
+            titleDiv.className = 'category-title';
+            titleDiv.innerText = cat.category;
+            menuContainer.appendChild(titleDiv);
 
-    menuData.forEach(cat => {
-        const titleDiv = document.createElement('div');
-        titleDiv.className = 'category-title';
-        titleDiv.innerText = cat.category;
-        menuContainer.appendChild(titleDiv);
+            let gridDiv = document.createElement('div');
+            gridDiv.className = 'menu-grid' + (cat.cols === 2 ? ' two-cols' : '');
 
-        const gridDiv = document.createElement('div');
-        gridDiv.className = 'menu-grid' + (cat.cols === 2 ? ' two-cols' : '');
-
-        cat.items.forEach(item => {
-            flatMenu.push(item);
-            const currentIdx = globalIndex;
-            const card = document.createElement('div');
-            card.className = 'food-card';
-            card.innerHTML = '<div><div class="food-name">' + item.name + '</div><div class="food-price">$' + item.price + '</div></div><div class="stepper"><button onclick="change(' + currentIdx + ',-1)">-</button><input type="number" id="qty-' + currentIdx + '" value="0" readonly><button onclick="change(' + currentIdx + ',1)">+</button></div>';
-            gridDiv.appendChild(card);
-            globalIndex++;
-        });
-        menuContainer.appendChild(gridDiv);
+            for (let j = 0; j < cat.items.length; j++) {
+                let item = cat.items[j];
+                flatMenu.push(item);
+                
+                let card = document.createElement('div');
+                card.className = 'food-card';
+                card.innerHTML = '<div><div class="food-name">' + item.name + '</div><div class="food-price">$' + item.price + '</div></div><div class="stepper"><button onclick="change(' + globalIndex + ',-1)">-</button><input type="number" id="qty-' + globalIndex + '" value="0" readonly><button onclick="change(' + globalIndex + ',1)">+</button></div>';
+                
+                gridDiv.appendChild(card);
+                globalIndex++;
+            }
+            menuContainer.appendChild(gridDiv);
+        }
     });
 
     window.switchPage = function(pageId, tabElement) {
-        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('page-menu').style.display = 'none';
+        document.getElementById('page-records').style.display = 'none';
+        document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+        
         document.getElementById(pageId).style.display = 'block';
         tabElement.classList.add('active');
     };
@@ -175,4 +192,57 @@
         if (!table || !name) return alert("請輸入姓名並選擇桌號！");
         
         let details = "";
-        let
+        let total = 0;
+        for (let i in selections) {
+            if (selections[i] > 0) {
+                details += flatMenu[i].name + "x" + selections[i] + " ";
+                total += selections[i] * flatMenu[i].price;
+            }
+        }
+        if (total === 0) return alert("請先選餐！");
+
+        const btn = document.getElementById('submit-btn');
+        btn.innerText = "提交中..."; btn.disabled = true;
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name: name, table: table, details: details, total: total }) });
+            alert("提交成功！"); location.reload();
+        } catch (e) {
+            alert("提交失敗"); btn.disabled = false; btn.innerText = "確認下單並提交 🚀";
+        }
+    }
+
+    async function fetchRecords() {
+        const listDiv = document.getElementById('records-list');
+        const loadingDiv = document.getElementById('loading');
+        loadingDiv.style.display = "block"; listDiv.innerHTML = "";
+
+        try {
+            const response = await fetch(SCRIPT_URL + "?action=read");
+            const data = await response.json();
+            loadingDiv.style.display = "none";
+            if(!data || data.length === 0) { listDiv.innerHTML = "<div style='text-align:center;color:#7f8c8d;'>目前還沒有人點餐喔！</div>"; return; }
+
+            data.sort((a, b) => (parseInt(a.table) || 0) - (parseInt(b.table) || 0));
+            let currentTable = "", tableTotal = 0, htmlHTML = "";
+
+            data.forEach((r, idx) => {
+                if (currentTable !== "" && currentTable !== r.table) {
+                    htmlHTML += '<div class="table-total-card"><span>🍵 ' + currentTable + ' 總計</span><span>$' + tableTotal + '</span></div>';
+                    tableTotal = 0;
+                }
+                currentTable = r.table; tableTotal += parseInt(r.total) || 0;
+                htmlHTML += '<div class="record-card"><div class="record-header"><span>' + r.table + ' - ' + r.name + '</span><span style="color:#4a90e2;">$' + r.total + '</span></div><div style="font-size:14px;color:#556677;line-height:1.4;">' + r.details + '</div></div>';
+                if (idx === data.length - 1) {
+                    htmlHTML += '<div class="table-total-card"><span>🍵 ' + currentTable + ' 總計</span><span>$' + tableTotal + '</span></div>';
+                }
+            });
+            listDiv.innerHTML = htmlHTML;
+        } catch (e) {
+            loadingDiv.style.display = "none";
+            listDiv.innerHTML = "<div style='text-align:center;color:#e74c3c;'>無法讀取匯總</div>";
+        }
+    }
+</script>
+</body>
+</html>
