@@ -3,44 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聚餐點餐神器</title>
+    <title>聚餐點餐統計</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; padding: 0; margin: 0; }
-        .tabs { display: flex; background: #005088; position: sticky; top: 0; z-index: 100; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 0; margin: 0; }
+        .tabs { display: flex; background: #005088; position: sticky; top: 0; }
         .tab { flex: 1; text-align: center; padding: 15px 0; color: #fff; font-weight: bold; cursor: pointer; opacity: 0.6; }
-        .tab.active { opacity: 1; border-bottom: 4px solid #11caa0; background: rgba(255,255,255,0.1); }
-        
+        .tab.active { opacity: 1; border-bottom: 4px solid #11caa0; }
         .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 140px; }
         .page { display: none; }
         .page.active { display: block; }
-        
         .input-group { margin-bottom: 12px; background: #f9f9f9; padding: 12px; border-radius: 10px; }
-        label { font-weight: bold; display: block; margin-bottom: 6px; color: #333; }
+        label { font-weight: bold; display: block; margin-bottom: 6px; }
         input[type="text"], select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        
-        /* 區分類別標題 */
-        .category-title { background: #e6f7ff; color: #005088; padding: 8px 12px; border-radius: 6px; font-weight: bold; margin: 15px 0 8px 0; font-size: 15px; }
-        
-        /* 單列與雙列並排的排版 */
+        .category-title { background: #e6f7ff; color: #005088; padding: 8px 12px; border-radius: 6px; font-weight: bold; margin: 15px 0 8px 0; }
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
         .menu-grid.two-cols { grid-template-columns: 1fr 1fr; }
-        
-        .food-card { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
-        .food-name { font-weight: 500; font-size: 15px; word-break: break-all; }
-        .food-price { color: #888; font-size: 13px; margin-top: 2px; }
-        
-        .stepper { display: flex; align-items: center; margin-left: 5px; }
-        .stepper button { background: #005088; color: white; border: none; width: 28px; height: 28px; border-radius: 14px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; padding: 0; }
-        .stepper input { width: 30px; text-align: center; border: none; font-size: 15px; background: transparent; padding: 0; }
-        
-        /* 統計明細樣式 */
-        .record-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .food-card { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .food-name { font-weight: bold; font-size: 15px; }
+        .stepper button { background: #005088; color: white; border: none; width: 28px; height: 28px; border-radius: 14px; cursor: pointer; }
+        .stepper input { width: 30px; text-align: center; border: none; font-size: 15px; }
+        .table-total-card { background: #e6f7ff; padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #91d5ff; display: flex; justify-content: space-between; font-weight: bold; color: #005088; }
+        .record-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 5px; }
         .record-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px; color: #005088; }
-        .table-total-card { background: #e6f7ff; padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #91d5ff; display: flex; justify-content: space-between; font-weight: bold; color: #005088; font-size: 16px; }
-        
-        #footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 1px solid #eee; text-align: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        #submit-btn { background: #11caa0; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; width: 100%; }
-        #loading { text-align: center; color: #888; padding: 20px; }
+        #footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 1px solid #eee; text-align: center; }
+        #submit-btn { background: #11caa0; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 18px; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -77,7 +63,7 @@
 
     <div id="page-records" class="page">
         <h3 style="margin-top:0; color:#333;">📋 全場即時點餐明細 (依桌號排序)</h3>
-        <div id="loading">載入中...</div>
+        <div id="loading" style="text-align:center; color:#888; padding:20px;">載入中...</div>
         <div id="records-list"></div>
     </div>
 </div>
@@ -85,21 +71,14 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
 
-    // 依據照片全新整理的結構化菜單
     const menuData = [
         { category: "主食湯底與肉盤", cols: 1, items: [
-            { name: "牛骨湯底+牛肉一份", price: 450 },
-            { name: "鴛鴦鍋 (牛肉、豬肉)", price: 650 },
-            { name: "蔬菜湯底+豬肉一份", price: 300 },
-            { name: "牛肉盤", price: 300 },
-            { name: "豬肉盤", price: 150 },
-            { name: "牛腩肉角盤", price: 250 },
-            { name: "牛腩肉筋盤", price: 250 },
-            { name: "牛肉湯", price: 130 },
-            { name: "牛牛飯", price: 40 },
-            { name: "白飯", price: 15 },
-            { name: "自助菜盤-大", price: 100 },
-            { name: "自助菜盤-中", price: 60 }
+            { name: "牛骨湯底+牛肉一份", price: 450 }, { name: "鴛鴦鍋 (牛肉、豬肉)", price: 650 },
+            { name: "蔬菜湯底+豬肉一份", price: 300 }, { name: "牛肉盤", price: 300 },
+            { name: "豬肉盤", price: 150 }, { name: "牛腩肉角盤", price: 250 },
+            { name: "牛腩肉筋盤", price: 250 }, { name: "牛肉湯", price: 130 },
+            { name: "牛牛飯", price: 40 }, { name: "白飯", price: 15 },
+            { name: "自助菜盤-大", price: 100 }, { name: "自助菜盤-中", price: 60 }
         ]},
         { category: "熱炒料理", cols: 2, items: [
             { name: "蔥爆牛", price: 180 }, { name: "蔥爆肚", price: 180 },
@@ -111,23 +90,19 @@
             { name: "麻油牛", price: 200 }, { name: "麻油麵", price: 200 }
         ]},
         { category: "時蔬與水酒", cols: 1, items: [
-            { name: "清炒時蔬", price: 60 },
-            { name: "台啤", price: 60 },
-            { name: "金牌、小海", price: 70 },
-            { name: "海尼根、百威", price: 100 },
-            { name: "汽水、礦泉水", price: 40 },
-            { name: "茶類、果汁", price: 60 },
+            { name: "清炒時蔬", price: 60 }, { name: "台啤", price: 60 },
+            { name: "金牌、小海", price: 70 }, { name: "海尼根、百威", price: 100 },
+            { name: "汽水、礦泉水", price: 40 }, { name: "茶類、果汁", price: 60 },
             { name: "石蓮花", price: 100 }
         ]}
     ];
 
     let selections = {};
-    let flatMenu = []; // 把所有品項攤平，對應唯一的全域 index
-    
-    // 生成並渲染菜單
+    let flatMenu = [];
     const menuContainer = document.getElementById('menu-container');
     let globalIndex = 0;
 
+    // 核心渲染邏輯（已做防呆簡化）
     menuData.forEach(cat => {
         const titleDiv = document.createElement('div');
         titleDiv.className = 'category-title';
@@ -139,21 +114,10 @@
 
         cat.items.forEach(item => {
             flatMenu.push(item);
-            const currentIdx = globalIndex; // 固定當前的 index 給事件使用
-            
+            const currentIdx = globalIndex;
             const card = document.createElement('div');
             card.className = 'food-card';
-            card.innerHTML = `
-                <div class="food-info">
-                    <div class="food-name">${item.name}</div>
-                    <div class="food-price">$${item.price}</div>
-                </div>
-                <div class="stepper">
-                    <button onclick="change(${currentIdx}, -1)">-</button>
-                    <input type="number" id="qty-${currentIdx}" value="0" readonly>
-                    <button onclick="change(${currentIdx}, 1)">+</button>
-                </div>
-            `;
+            card.innerHTML = '<div><div class="food-name">' + item.name + '</div><div style="color:#888;font-size:13px;">$' + item.price + '</div></div><div class="stepper"><button onclick="change(' + currentIdx + ',-1)">-</button><input type="number" id="qty-' + currentIdx + '" value="0" readonly><button onclick="change(' + currentIdx + ',1)">+</button></div>';
             gridDiv.appendChild(card);
             globalIndex++;
         });
@@ -161,9 +125,9 @@
     });
 
     window.switchPage = function(pageId, tabElement) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
+        document.getElementById(pageId).style.display = 'block';
         tabElement.classList.add('active');
     };
 
@@ -184,8 +148,7 @@
     async function submitOrder() {
         const name = document.getElementById('user-name').value.trim();
         const table = document.getElementById('table-num').value;
-        if (!table) return alert("請選擇桌號！");
-        if (!name) return alert("請輸入姓名！");
+        if (!table || !name) return alert("請輸入姓名並選擇桌號！");
         
         let details = "";
         let total = 0;
@@ -198,31 +161,47 @@
         if (total === 0) return alert("請先選餐！");
 
         const btn = document.getElementById('submit-btn');
-        btn.innerText = "提交中...";
-        btn.disabled = true;
+        btn.innerText = "提交中..."; btn.disabled = true;
 
         try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ name: name, table: table, details: details, total: total })
-            });
-            alert("提交成功！");
-            location.reload();
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name: name, table: table, details: details, total: total }) });
+            alert("提交成功！"); location.reload();
         } catch (e) {
-            alert("提交失敗");
-            btn.disabled = false;
-            btn.innerText = "確認下單並提交";
+            alert("提交失敗"); btn.disabled = false; btn.innerText = "確認下單並提交";
         }
     }
 
     async function fetchRecords() {
         const listDiv = document.getElementById('records-list');
         const loadingDiv = document.getElementById('loading');
-        loadingDiv.style.display = "block";
-        listDiv.innerHTML =
-}
-        render(); // 必須有這一行，菜單才會畫出來！
-    </script>
+        loadingDiv.style.display = "block"; listDiv.innerHTML = "";
+
+        try {
+            const response = await fetch(SCRIPT_URL + "?action=read");
+            const data = await response.json();
+            loadingDiv.style.display = "none";
+            if(!data || data.length === 0) { listDiv.innerHTML = "<div style='text-align:center;color:#888;'>目前還沒有人點餐喔！</div>"; return; }
+
+            data.sort((a, b) => (parseInt(a.table) || 0) - (parseInt(b.table) || 0));
+            let currentTable = "", tableTotal = 0, htmlHTML = "";
+
+            data.forEach((r, idx) => {
+                if (currentTable !== "" && currentTable !== r.table) {
+                    htmlHTML += '<div class="table-total-card"><span>💰 ' + currentTable + ' 小計</span><span>$' + tableTotal + '</span></div>';
+                    tableTotal = 0;
+                }
+                currentTable = r.table; tableTotal += parseInt(r.total) || 0;
+                htmlHTML += '<div class="record-card"><div class="record-header"><span>' + r.table + ' - ' + r.name + '</span><span style="color:#e91e63;">$' + r.total + '</span></div><div style="font-size:14px;color:#555;">' + r.details + '</div></div>';
+                if (idx === data.length - 1) {
+                    htmlHTML += '<div class="table-total-card"><span>💰 ' + currentTable + ' 小計</span><span>$' + tableTotal + '</span></div>';
+                }
+            });
+            listDiv.innerHTML = htmlHTML;
+        } catch (e) {
+            loadingDiv.style.display = "none";
+            listDiv.innerHTML = "<div style='text-align:center;color:red;'>無法讀取匯總</div>";
+        }
+    }
+</script>
 </body>
 </html>
