@@ -6,7 +6,6 @@
     <title>聚餐點餐神器</title>
     <style>
         body { font-family: -apple-system, sans-serif; background: #f0f2f5; padding: 0; margin: 0; }
-        /* 頂部導覽列 */
         .tabs { display: flex; background: #005088; position: sticky; top: 0; z-index: 100; }
         .tab { flex: 1; text-align: center; padding: 15px 0; color: #fff; font-weight: bold; cursor: pointer; opacity: 0.6; }
         .tab.active { opacity: 1; border-bottom: 4px solid #11caa0; background: rgba(255,255,255,0.1); }
@@ -25,9 +24,12 @@
         .stepper button { background: #005088; color: white; border: none; width: 32px; height: 32px; border-radius: 16px; cursor: pointer; font-size: 20px; }
         .stepper input { width: 40px; text-align: center; border: none; font-size: 16px; background: transparent; }
         
-        /* 統計清單樣式 */
-        .record-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* 統計明細卡片樣式 */
+        .record-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .record-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px; color: #005088; }
+        
+        /* 桌總計專用醒目樣式 */
+        .table-total-card { background: #e6f7ff; padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #91d5ff; display: flex; justify-content: space-between; font-weight: bold; color: #005088; font-size: 16px; }
         
         #footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 1px solid #eee; text-align: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         #submit-btn { background: #11caa0; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; width: 100%; }
@@ -65,7 +67,7 @@
     </div>
 
     <div id="page-records" class="page">
-        <h3 style="margin-top:0; color:#333;">📋 全場即時點餐明細</h3>
+        <h3 style="margin-top:0; color:#333;">📋 全場即時點餐明細 (依桌號排序)</h3>
         <div id="loading">載入中...</div>
         <div id="records-list"></div>
     </div>
@@ -88,7 +90,6 @@
 
     let selections = {};
     
-    // 分頁切換功能
     window.switchPage = function(pageId, tabElement) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -96,7 +97,6 @@
         tabElement.classList.add('active');
     };
 
-    // 產生菜單
     const list = document.getElementById('menu-list');
     menu.forEach((item, index) => {
         const div = document.createElement('div');
@@ -126,7 +126,6 @@
         document.getElementById('total-price').innerText = total;
     }
 
-    // 提交餐點
     async function submitOrder() {
         const name = document.getElementById('user-name').value.trim();
         const table = document.getElementById('table-num').value;
@@ -162,7 +161,7 @@
         }
     }
 
-    // 從 Google Sheets 讀取所有人點餐資料的功能
+    // 讀取並動態依桌號排序、計算桌總額的功能
     async function fetchRecords() {
         const listDiv = document.getElementById('records-list');
         const loadingDiv = document.getElementById('loading');
@@ -170,7 +169,6 @@
         listDiv.innerHTML = "";
 
         try {
-            // 注意：讀取資料需要改用 GET 方法請求 Google
             const response = await fetch(SCRIPT_URL + "?action=read");
             const data = await response.json();
             loadingDiv.style.display = "none";
@@ -180,18 +178,57 @@
                 return;
             }
 
-            data.forEach(r => {
-                const card = document.createElement('div');
-                card.className = 'record-card';
-                card.innerHTML = `
-                    <div class="record-header">
-                        <span>${r.table} - ${r.name}</span>
-                        <span style="color:#e91e63;">$${r.total}</span>
-                    </div>
-                    <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}</div>
-                `;
-                listDiv.appendChild(card);
+            // 1. 自動排序：依照桌號數字大小排列 (1號桌 -> 2號桌 -> 3號桌...)
+            data.sort((a, b) => {
+                let numA = parseInt(a.table) || 0;
+                let numB = parseInt(b.table) || 0;
+                return numA - numB;
             });
+
+            // 2. 處理分組顯示與每桌加總
+            let currentTable = "";
+            let tableTotal = 0;
+            let htmlHTML = "";
+
+            data.forEach((r, idx) => {
+                // 如果換桌了，且不是第一筆，就把上一桌的「桌總計」吐出來
+                if (currentTable !== "" && currentTable !== r.table) {
+                    htmlHTML += `
+                        <div class="table-total-card">
+                            <span>💰 ${currentTable} 小計</span>
+                            <span>$${tableTotal}</span>
+                        </div>
+                    `;
+                    tableTotal = 0; // 金額歸零，算新的一桌
+                }
+
+                currentTable = r.table;
+                tableTotal += parseInt(r.total) || 0;
+
+                // 顯示個人的點餐卡片
+                htmlHTML += `
+                    <div class="record-card">
+                        <div class="record-header">
+                            <span>${r.table} - ${r.name}</span>
+                            <span style="color:#e91e63;">$${r.total}</span>
+                        </div>
+                        <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}</div>
+                    </div>
+                `;
+
+                // 如果已經是最後一筆資料，要把最後一桌的「桌總計」加上去
+                if (idx === data.length - 1) {
+                    htmlHTML += `
+                        <div class="table-total-card">
+                            <span>💰 ${currentTable} 小計</span>
+                            <span>$${tableTotal}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            listDiv.innerHTML = htmlHTML;
+
         } catch (e) {
             loadingDiv.style.display = "none";
             listDiv.innerHTML = "<div style='text-align:center;color:red;'>無法讀取匯總，請確認 Google 後台已開啟讀取功能。</div>";
