@@ -247,4 +247,20 @@
                 htmlHTML += `
                     <div class="record-card">
                         <div class="record-header"><span>${r.table} - ${r.name}</span><span style="color:#e91e63;">$${r.total}</span></div>
-                        <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}
+                        <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}</div>
+                    </div>
+                `;
+
+                if (idx === data.length - 1) {
+                    htmlHTML += `<div class="table-total-card"><span>💰 ${currentTable} 小計</span><span>$${tableTotal}</span></div>`;
+                }
+            });
+            listDiv.innerHTML = htmlHTML;
+        } catch (e) {
+            loadingDiv.style.display = "none";
+            listDiv.innerHTML = "<div style='text-align:center;color:red;'>無法讀取匯總，請確認 Google 後台已開啟讀取功能。</div>";
+        }
+    }
+</script>
+</body>
+</html>
