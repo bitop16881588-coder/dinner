@@ -29,9 +29,9 @@
         .food-name { font-weight: 500; font-size: 15px; word-break: break-all; }
         .food-price { color: #888; font-size: 13px; margin-top: 2px; }
         
-        .stepper { display: flex; align-items: center; }
-        .stepper button { background: #005088; color: white; border: none; width: 28px; height: 28px; border-radius: 14px; cursor: pointer; font-size: 16px; }
-        .stepper input { width: 30px; text-align: center; border: none; font-size: 15px; background: transparent; }
+        .stepper { display: flex; align-items: center; margin-left: 5px; }
+        .stepper button { background: #005088; color: white; border: none; width: 28px; height: 28px; border-radius: 14px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; padding: 0; }
+        .stepper input { width: 30px; text-align: center; border: none; font-size: 15px; background: transparent; padding: 0; }
         
         /* 統計明細樣式 */
         .record-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -85,7 +85,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
 
-    // 依據照片全新整理的結構化菜單
+    // 依據照片重新整理的結構化菜單，熱炒細項完全分開
     const menuData = [
         { category: "主食湯底與肉盤", cols: 1, items: [
             { name: "牛骨湯底+牛肉一份", price: 450 },
@@ -101,10 +101,12 @@
             { name: "自助菜盤-大", price: 100 },
             { name: "自助菜盤-中", price: 60 }
         ]},
-        { category: "熱炒與麻油料理 (並排區)", cols: 2, items: [
+        { category: "熱炒料理 (已全部分開)", cols: 2, items: [
             { name: "蔥爆牛", price: 180 }, { name: "蔥爆肚", price: 180 },
             { name: "沙茶牛", price: 180 }, { name: "沙茶肚", price: 180 },
-            { name: "沙茶肝", price: 180 }, { name: "沙茶髓", price: 180 },
+            { name: "沙茶肝", price: 180 }, { name: "沙茶髓", price: 180 }
+        ]},
+        { category: "麻油料理 (已全部分開)", cols: 2, items: [
             { name: "麻油心", price: 200 }, { name: "麻油肝", price: 200 },
             { name: "麻油牛", price: 200 }, { name: "麻油麵", price: 200 }
         ]},
@@ -245,20 +247,4 @@
                 htmlHTML += `
                     <div class="record-card">
                         <div class="record-header"><span>${r.table} - ${r.name}</span><span style="color:#e91e63;">$${r.total}</span></div>
-                        <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}</div>
-                    </div>
-                `;
-
-                if (idx === data.length - 1) {
-                    htmlHTML += `<div class="table-total-card"><span>💰 ${currentTable} 小計</span><span>$${tableTotal}</span></div>`;
-                }
-            });
-            listDiv.innerHTML = htmlHTML;
-        } catch (e) {
-            loadingDiv.style.display = "none";
-            listDiv.innerHTML = "<div style='text-align:center;color:red;'>無法讀取匯總，請確認 Google 後台已開啟讀取功能。</div>";
-        }
-    }
-</script>
-</body>
-</html>
+                        <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}
