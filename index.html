@@ -10,25 +10,32 @@
         .tab { flex: 1; text-align: center; padding: 15px 0; color: #fff; font-weight: bold; cursor: pointer; opacity: 0.6; }
         .tab.active { opacity: 1; border-bottom: 4px solid #11caa0; background: rgba(255,255,255,0.1); }
         
-        .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 120px; }
+        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 140px; }
         .page { display: none; }
         .page.active { display: block; }
         
-        .input-group { margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 10px; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #333; }
-        input[type="text"], select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .input-group { margin-bottom: 12px; background: #f9f9f9; padding: 12px; border-radius: 10px; }
+        label { font-weight: bold; display: block; margin-bottom: 6px; color: #333; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         
-        .food-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; background: white; margin-bottom: 5px; border-radius: 8px; }
-        .food-name { font-weight: 500; }
-        .food-price { color: #888; font-size: 14px; }
-        .stepper button { background: #005088; color: white; border: none; width: 32px; height: 32px; border-radius: 16px; cursor: pointer; font-size: 20px; }
-        .stepper input { width: 40px; text-align: center; border: none; font-size: 16px; background: transparent; }
+        /* 區分類別標題 */
+        .category-title { background: #e6f7ff; color: #005088; padding: 8px 12px; border-radius: 6px; font-weight: bold; margin: 15px 0 8px 0; font-size: 15px; }
         
-        /* 統計明細卡片樣式 */
+        /* 單列與雙列並排的排版 */
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+        .menu-grid.two-cols { grid-template-columns: 1fr 1fr; }
+        
+        .food-card { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
+        .food-name { font-weight: 500; font-size: 15px; word-break: break-all; }
+        .food-price { color: #888; font-size: 13px; margin-top: 2px; }
+        
+        .stepper { display: flex; align-items: center; }
+        .stepper button { background: #005088; color: white; border: none; width: 28px; height: 28px; border-radius: 14px; cursor: pointer; font-size: 16px; }
+        .stepper input { width: 30px; text-align: center; border: none; font-size: 15px; background: transparent; }
+        
+        /* 統計明細樣式 */
         .record-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .record-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px; color: #005088; }
-        
-        /* 桌總計專用醒目樣式 */
         .table-total-card { background: #e6f7ff; padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #91d5ff; display: flex; justify-content: space-between; font-weight: bold; color: #005088; font-size: 16px; }
         
         #footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 1px solid #eee; text-align: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
@@ -59,7 +66,9 @@
             <label>您的姓名：</label>
             <input type="text" id="user-name" placeholder="請輸入姓名">
         </div>
-        <div id="menu-list"></div>
+        
+        <div id="menu-container"></div>
+
         <div id="footer">
             <div style="margin-bottom:10px; font-size:18px; font-weight:bold;">您的總計：$<span id="total-price">0</span></div>
             <button id="submit-btn" onclick="submitOrder()">確認下單並提交</button>
@@ -76,41 +85,83 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
 
-    const menu = [
-        { name: "牛骨湯底+牛肉一份", price: 450 }, { name: "鴛鴦鍋 (牛肉、豬肉)", price: 650 },
-        { name: "蔬菜湯底+豬肉一份", price: 300 }, { name: "牛肉盤", price: 300 },
-        { name: "豬肉盤", price: 150 }, { name: "牛腩肉角盤", price: 250 },
-        { name: "牛腩肉筋盤", price: 250 }, { name: "牛肉湯", price: 130 },
-        { name: "牛牛飯", price: 40 }, { name: "白飯", price: 15 },
-        { name: "自助菜盤-大", price: 100 }, { name: "自助菜盤-中", price: 60 },
-        { name: "蔥爆牛/蔥爆肚", price: 180 }, { name: "沙茶牛/沙茶肚", price: 180 },
-        { name: "麻油心/麻油肝", price: 200 }, { name: "清炒時蔬", price: 60 },
-        { name: "台啤", price: 60 }, { name: "汽水/礦泉水", price: 40 }, { name: "茶類/果汁", price: 60 }
+    // 依據照片全新整理的結構化菜單
+    const menuData = [
+        { category: "主食湯底與肉盤", cols: 1, items: [
+            { name: "牛骨湯底+牛肉一份", price: 450 },
+            { name: "鴛鴦鍋 (牛肉、豬肉)", price: 650 },
+            { name: "蔬菜湯底+豬肉一份", price: 300 },
+            { name: "牛肉盤", price: 300 },
+            { name: "豬肉盤", price: 150 },
+            { name: "牛腩肉角盤", price: 250 },
+            { name: "牛腩肉筋盤", price: 250 },
+            { name: "牛肉湯", price: 130 },
+            { name: "牛牛飯", price: 40 },
+            { name: "白飯", price: 15 },
+            { name: "自助菜盤-大", price: 100 },
+            { name: "自助菜盤-中", price: 60 }
+        ]},
+        { category: "熱炒與麻油料理 (並排區)", cols: 2, items: [
+            { name: "蔥爆牛", price: 180 }, { name: "蔥爆肚", price: 180 },
+            { name: "沙茶牛", price: 180 }, { name: "沙茶肚", price: 180 },
+            { name: "沙茶肝", price: 180 }, { name: "沙茶髓", price: 180 },
+            { name: "麻油心", price: 200 }, { name: "麻油肝", price: 200 },
+            { name: "麻油牛", price: 200 }, { name: "麻油麵", price: 200 }
+        ]},
+        { category: "時蔬與水酒", cols: 1, items: [
+            { name: "清炒時蔬", price: 60 },
+            { name: "台啤", price: 60 },
+            { name: "金牌、小海", price: 70 },
+            { name: "海尼根、百威", price: 100 },
+            { name: "汽水、礦泉水", price: 40 },
+            { name: "茶類、果汁", price: 60 },
+            { name: "石蓮花", price: 100 }
+        ]}
     ];
 
     let selections = {};
+    let flatMenu = []; // 扁平化陣列方便索引計算
     
+    // 生成並渲染菜單
+    const menuContainer = document.getElementById('menu-container');
+    let globalIndex = 0;
+
+    menuData.forEach(cat => {
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'category-title';
+        titleDiv.innerText = cat.category;
+        menuContainer.appendChild(titleDiv);
+
+        const gridDiv = document.createElement('div');
+        gridDiv.className = 'menu-grid' + (cat.cols === 2 ? ' two-cols' : '');
+
+        cat.items.forEach(item => {
+            flatMenu.push(item);
+            const card = document.createElement('div');
+            card.className = 'food-card';
+            card.innerHTML = `
+                <div class="food-info">
+                    <div class="food-name">${item.name}</div>
+                    <div class="food-price">$${item.price}</div>
+                </div>
+                <div class="stepper">
+                    <button onclick="change(${globalIndex}, -1)">-</button>
+                    <input type="number" id="qty-${globalIndex}" value="0" readonly>
+                    <button onclick="change(${globalIndex}, 1)">+</button>
+                </div>
+            `;
+            gridDiv.appendChild(card);
+            globalIndex++;
+        });
+        menuContainer.appendChild(gridDiv);
+    });
+
     window.switchPage = function(pageId, tabElement) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(pageId).classList.add('active');
         tabElement.classList.add('active');
     };
-
-    const list = document.getElementById('menu-list');
-    menu.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'food-item';
-        div.innerHTML = `
-            <div><div class="food-name">${item.name}</div><div class="food-price">$${item.price}</div></div>
-            <div class="stepper">
-                <button onclick="change(${index}, -1)">-</button>
-                <input type="number" id="qty-${index}" value="0" readonly>
-                <button onclick="change(${index}, 1)">+</button>
-            </div>
-        `;
-        list.appendChild(div);
-    });
 
     window.change = function(index, delta) {
         let current = selections[index] || 0;
@@ -122,7 +173,7 @@
 
     function updateTotal() {
         let total = 0;
-        for (let i in selections) { total += selections[i] * menu[i].price; }
+        for (let i in selections) { total += selections[i] * flatMenu[i].price; }
         document.getElementById('total-price').innerText = total;
     }
 
@@ -136,8 +187,8 @@
         let total = 0;
         for (let i in selections) {
             if (selections[i] > 0) {
-                details += menu[i].name + "x" + selections[i] + " ";
-                total += selections[i] * menu[i].price;
+                details += flatMenu[i].name + "x" + selections[i] + " ";
+                total += selections[i] * flatMenu[i].price;
             }
         }
         if (total === 0) return alert("請先選餐！");
@@ -161,7 +212,6 @@
         }
     }
 
-    // 讀取並動態依桌號排序、計算桌總額的功能
     async function fetchRecords() {
         const listDiv = document.getElementById('records-list');
         const loadingDiv = document.getElementById('loading');
@@ -178,57 +228,32 @@
                 return;
             }
 
-            // 1. 自動排序：依照桌號數字大小排列 (1號桌 -> 2號桌 -> 3號桌...)
-            data.sort((a, b) => {
-                let numA = parseInt(a.table) || 0;
-                let numB = parseInt(b.table) || 0;
-                return numA - numB;
-            });
+            data.sort((a, b) => (parseInt(a.table) || 0) - (parseInt(b.table) || 0));
 
-            // 2. 處理分組顯示與每桌加總
             let currentTable = "";
             let tableTotal = 0;
             let htmlHTML = "";
 
             data.forEach((r, idx) => {
-                // 如果換桌了，且不是第一筆，就把上一桌的「桌總計」吐出來
                 if (currentTable !== "" && currentTable !== r.table) {
-                    htmlHTML += `
-                        <div class="table-total-card">
-                            <span>💰 ${currentTable} 小計</span>
-                            <span>$${tableTotal}</span>
-                        </div>
-                    `;
-                    tableTotal = 0; // 金額歸零，算新的一桌
+                    htmlHTML += `<div class="table-total-card"><span>💰 ${currentTable} 小計</span><span>$${tableTotal}</span></div>`;
+                    tableTotal = 0;
                 }
-
                 currentTable = r.table;
                 tableTotal += parseInt(r.total) || 0;
 
-                // 顯示個人的點餐卡片
                 htmlHTML += `
                     <div class="record-card">
-                        <div class="record-header">
-                            <span>${r.table} - ${r.name}</span>
-                            <span style="color:#e91e63;">$${r.total}</span>
-                        </div>
+                        <div class="record-header"><span>${r.table} - ${r.name}</span><span style="color:#e91e63;">$${r.total}</span></div>
                         <div style="font-size:14px; color:#555; line-height:1.4;">${r.details}</div>
                     </div>
                 `;
 
-                // 如果已經是最後一筆資料，要把最後一桌的「桌總計」加上去
                 if (idx === data.length - 1) {
-                    htmlHTML += `
-                        <div class="table-total-card">
-                            <span>💰 ${currentTable} 小計</span>
-                            <span>$${tableTotal}</span>
-                        </div>
-                    `;
+                    htmlHTML += `<div class="table-total-card"><span>💰 ${currentTable} 小計</span><span>$${tableTotal}</span></div>`;
                 }
             });
-
             listDiv.innerHTML = htmlHTML;
-
         } catch (e) {
             loadingDiv.style.display = "none";
             listDiv.innerHTML = "<div style='text-align:center;color:red;'>無法讀取匯總，請確認 Google 後台已開啟讀取功能。</div>";
