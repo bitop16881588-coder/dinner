@@ -2,91 +2,98 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>聚餐點餐系統</title>
+    <title>聚餐點餐神器</title>
     <style>
-        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 12px; background: white; border-radius: 15px; cursor: pointer; text-align: center; border: 2px solid #4a90e2; color: #4a90e2; font-weight: bold; }
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
+        body { font-family: 'Comfortaa', sans-serif; background: #f0f4f8; color: #2c3e50; margin: 0; padding-bottom: 100px; }
+        .tabs { display: flex; background: #fff; padding: 10px; gap: 5px; position: sticky; top: 0; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 15px; cursor: pointer; color: #4a90e2; font-weight: bold; }
         .tab.active { background: #4a90e2; color: white; }
-        .page { display: none; }
+        .page { display: none; padding: 20px; }
         .page.active { display: block; }
-        .btn { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 15px; font-weight: bold; }
+        .card { background: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .category-title { color: #1e3a8a; font-weight: bold; margin: 20px 0 10px 5px; }
+        .food-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; }
+        .btn-main { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 15px; font-weight: bold; }
+        .stepper { display: flex; align-items: center; gap: 10px; }
+        button { background: #4a90e2; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="tabs">
-    <div id="t1" class="tab active" onclick="go(0)">🏠 填資料與查看</div>
-    <div id="t2" class="tab" onclick="go(1)">🍲 點餐清單</div>
+    <div class="tab active" onclick="go(0, this)">🏠 設定/匯總</div>
+    <div class="tab" onclick="go(1, this)">🍲 點餐</div>
 </div>
 
 <div id="p0" class="page active">
     <div class="card">
-        <label>您的姓名：</label><input type="text" id="n1" oninput="syncName(this)" style="width:100%; padding:10px; margin:5px 0;">
-        <label>選擇桌號：</label>
-        <select id="t1_val" onchange="syncTable(this)" style="width:100%; padding:10px; margin:5px 0;">
+        <label>姓名：</label><input type="text" id="n1" oninput="syncName(this)" style="width:100%; padding:8px;">
+        <label style="margin-top:10px; display:block;">桌號：</label>
+        <select id="t1" onchange="syncTable(this)" style="width:100%; padding:8px;">
             <option>1號桌</option><option>2號桌</option><option>3號桌</option><option>4號桌</option>
         </select>
     </div>
-    <h3>📋 目前已點餐明細</h3>
+    <h3>📋 其他人已點餐況</h3>
     <div id="records-list"></div>
 </div>
 
 <div id="p1" class="page">
-    <div class="card">
-        <label>姓名：</label><input type="text" id="n2" readonly style="width:100%; padding:10px;">
-    </div>
-    <div id="menu-box" class="card"></div>
-    <button class="btn" onclick="send()">確認送出訂單</button>
+    <div id="menu-box"></div>
+    <button class="btn-main" onclick="send()">送出訂單</button>
 </div>
 
 <script>
     const URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
-    const menu = [{name:"牛肉盤",p:300},{name:"豬肉盤",p:150},{name:"蔥爆牛",p:180}];
-    let sels = {}, name = "", table = "1號桌";
+    const menuData = [
+        { cat: "主食湯底與肉盤", items: [{n:"牛骨湯底",p:450}, {n:"鴛鴦鍋",p:650}] },
+        { cat: "熱炒料理", items: [{n:"蔥爆牛",p:180}, {n:"蔥爆肚",p:180}, {n:"沙茶牛",p:180}, {n:"沙茶肚",p:180}] },
+        { cat: "麻油料理", items: [{n:"麻油心",p:200}, {n:"麻油肝",p:200}] }
+    ];
+    let sels = {}, name = "", table = "1號桌", flatMenu = [];
 
-    // 頁面切換與讀取匯總
-    function go(i) {
-        document.getElementById('p0').className = i===0 ? 'page active' : 'page';
-        document.getElementById('p1').className = i===1 ? 'page active' : 'page';
-        document.getElementById('t1').className = i===0 ? 'tab active' : 'tab';
-        document.getElementById('t2').className = i===1 ? 'tab active' : 'tab';
+    function go(i, el) {
+        document.querySelectorAll('.page').forEach((p, idx) => p.className = idx===i ? 'page active' : 'page');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        if(el) el.classList.add('active');
         if(i===0) loadRecords();
     }
 
-    function syncName(el) { name = el.value; document.getElementById('n2').value = name; }
+    function syncName(el) { name = el.value; }
     function syncTable(el) { table = el.value; }
 
-    // 渲染菜單
     const box = document.getElementById('menu-box');
-    menu.forEach((item, i) => {
-        box.innerHTML += `<div>${item.name} ($${item.p}) 
-            <button onclick="change(${i},-1)">-</button><input id="q${i}" value="0" style="width:30px;text-align:center"><button onclick="change(${i},1)">+</button></div>`;
+    let idx = 0;
+    menuData.forEach(c => {
+        box.innerHTML += `<div class="category-title">${c.cat}</div>`;
+        c.items.forEach(it => {
+            flatMenu.push(it);
+            box.innerHTML += `<div class="food-item">${it.n} ($${it.p}) 
+                <div class="stepper"><button onclick="change(${idx},-1)">-</button><input id="q${idx}" value="0" style="width:30px;text-align:center"><button onclick="change(${idx},1)">+</button></div></div>`;
+            idx++;
+        });
     });
 
     function change(i, d) { sels[i] = Math.max(0, (sels[i]||0) + d); document.getElementById('q'+i).value = sels[i]; }
+
+    async function send() {
+        if(!name) return alert("請填姓名");
+        let d = "", s = 0;
+        for(let k in sels) if(sels[k]>0) { d += flatMenu[k].n+"x"+sels[k]+" "; s += sels[k]*flatMenu[k].p; }
+        await fetch(URL, {method:'POST', mode:'no-cors', body:JSON.stringify({name, table, details:d, total:s})});
+        alert("送出成功"); location.reload();
+    }
 
     async function loadRecords() {
         const res = await fetch(URL + "?action=read");
         const data = await res.json();
         let html = "";
-        // 按桌號排序並顯示
         data.sort((a,b)=>parseInt(a.table)-parseInt(b.table)).forEach(r => {
-            html += `<div class="card"><b>[${r.table}] ${r.name}</b><br>${r.details} <br>小計: $${r.total}</div>`;
+            html += `<div class="card"><b>[${r.table}] ${r.name}</b><br>${r.details}<br>金額: $${r.total}</div>`;
         });
         document.getElementById('records-list').innerHTML = html;
     }
-
-    async function send() {
-        if(!name) return alert("請先填寫姓名");
-        let d = "", s = 0;
-        for(let k in sels) if(sels[k]>0) { d += menu[k].name+"x"+sels[k]+" "; s += sels[k]*menu[k].p; }
-        await fetch(URL, {method:'POST', mode:'no-cors', body:JSON.stringify({name, table, details:d, total:s})});
-        alert("送出成功"); location.reload();
-    }
-
-    loadRecords(); // 初始載入
+    loadRecords();
 </script>
 </body>
 </html>
