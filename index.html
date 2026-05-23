@@ -101,4 +101,223 @@
         }
         .btn-submit { 
             background: #4a90e2; color: white; border: none; 
-            padding: 15px; border-radius: 18px; width: 100
+            padding: 15px; border-radius: 18px; width: 100%;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="tabs">
+    <div class="tab active" id="tab1" onclick="switchPage('page1')">👤 1. 填資料</div>
+    <div class="tab" id="tab2" onclick="switchPage('page2')">🍲 2. 點餐點</div>
+    <div class="tab" id="tab3" onclick="switchPage('page3')">📊 3. 看明細</div>
+</div>
+
+<div class="container">
+    <div id="page1" class="page active">
+        <div class="card">
+            <label>您的姓名 ✏️</label>
+            <input type="text" id="user-name" placeholder="請輸入名字">
+        </div>
+        <div class="card">
+            <label>選擇桌號 🏠</label>
+            <div class="table-grid">
+                <div class="table-option" onclick="selectTable('1號桌', this)">1號桌</div>
+                <div class="table-option" onclick="selectTable('2號桌', this)">2號桌</div>
+                <div class="table-option" onclick="selectTable('3號桌', this)">3號桌</div>
+                <div class="table-option" onclick="selectTable('4號桌', this)">4號桌</div>
+                <div class="table-option" onclick="selectTable('5號桌', this)">5號桌</div>
+                <div class="table-option" onclick="selectTable('6號桌', this)">6號桌</div>
+            </div>
+        </div>
+        <button class="btn-submit" onclick="switchPage('page2')">填好了，去點餐 ➔</button>
+    </div>
+
+    <div id="page2" class="page">
+        <div id="menu-container"></div>
+        <div id="footer">
+            <div style="margin-bottom:10px; font-weight:bold;">您目前的小計：<span id="total-price" style="color:#e74c3c">$0</span></div>
+            <button class="btn-submit" id="submit-btn" onclick="submitOrder()">確認點餐並送出 🚀</button>
+        </div>
+    </div>
+
+    <div id="page3" class="page">
+        <h3 style="text-align:center;">📋 大家點了什麼？</h3>
+        <div id="loading" style="text-align:center; color:#94a3b8; padding:20px;">資料搬運中...</div>
+        <div id="records-list"></div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
+    
+    // 完整菜單
+    const menuData = [
+        { category: "🍲 湯底與肉盤", items: [
+            { name: "牛骨湯底+牛肉一份", price: 450 }, { name: "鴛鴦鍋 (牛肉、豬肉)", price: 650 },
+            { name: "蔬菜湯底+豬肉一份", price: 300 }, { name: "牛肉盤", price: 300 },
+            { name: "豬肉盤", price: 150 }, { name: "牛腩肉角盤", price: 250 },
+            { name: "牛腩肉筋盤", price: 250 }, { name: "牛肉湯", price: 130 },
+            { name: "牛牛飯", price: 40 }, { name: "白飯", price: 15 }
+        ]},
+        { category: "🥗 自助與熱炒", items: [
+            { name: "自助菜盤-大", price: 100 }, { name: "自助菜盤-中", price: 60 },
+            { name: "蔥爆牛", price: 180 }, { name: "蔥爆肚", price: 180 },
+            { name: "沙茶牛", price: 180 }, { name: "沙茶肚", price: 180 }
+        ]},
+        { category: "🍺 水酒飲料", items: [
+            { name: "台啤", price: 60 }, { name: "金牌、小海", price: 70 },
+            { name: "汽水、礦泉水", price: 40 }, { name: "茶類、果汁", price: 60 }
+        ]}
+    ];
+
+    let selections = {};
+    let selectedTable = "";
+    let flatMenu = [];
+
+    // 初始化網頁
+    window.onload = function() {
+        const container = document.getElementById('menu-container');
+        let idx = 0;
+        menuData.forEach(cat => {
+            let html = `<div class="category-title">${cat.category}</div><div class="card">`;
+            cat.items.forEach(item => {
+                flatMenu.push(item);
+                html += `
+                    <div class="food-item">
+                        <div><div class="food-name">${item.name}</div><div class="food-price">$${item.price}</div></div>
+                        <div class="stepper">
+                            <button onclick="change(${idx}, -1)">-</button>
+                            <input type="number" id="qty-${idx}" value="0" readonly>
+                            <button onclick="change(${idx}, 1)">+</button>
+                        </div>
+                    </div>`;
+                idx++;
+            });
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+    };
+
+    // 切換頁面功能
+    function switchPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        
+        // 對應 Tab 高亮
+        if(pageId === 'page1') document.getElementById('tab1').classList.add('active');
+        if(pageId === 'page2') document.getElementById('tab2').classList.add('active');
+        if(pageId === 'page3') {
+            document.getElementById('tab3').classList.add('active');
+            fetchRecords();
+        }
+        window.scrollTo(0,0);
+    }
+
+    // 選擇桌號功能
+    function selectTable(name, element) {
+        selectedTable = name;
+        document.querySelectorAll('.table-option').forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    // 數量增減
+    window.change = function(index, delta) {
+        let current = selections[index] || 0;
+        current = Math.max(0, current + delta);
+        selections[index] = current;
+        document.getElementById('qty-' + index).value = current;
+        updateTotal();
+    };
+
+    function updateTotal() {
+        let total = 0;
+        for (let i in selections) { total += selections[i] * flatMenu[i].price; }
+        document.getElementById('total-price').innerText = "$" + total;
+    }
+
+    // 提交到 Google
+    async function submitOrder() {
+        const name = document.getElementById('user-name').value.trim();
+        if (!name || !selectedTable) return alert("❌ 請先在第一頁填寫名字並選好桌號！");
+        
+        let details = "";
+        let total = 0;
+        for (let i in selections) {
+            if (selections[i] > 0) {
+                details += flatMenu[i].name + "x" + selections[i] + " ";
+                total += selections[i] * flatMenu[i].price;
+            }
+        }
+        if (total === 0) return alert("❌ 至少點一項餐點吧！");
+
+        const btn = document.getElementById('submit-btn');
+        btn.innerText = "提交中..."; btn.disabled = true;
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ name: name, table: selectedTable, details: details, total: total })
+            });
+            alert("✅ 點餐成功！");
+            location.reload();
+        } catch (e) {
+            alert("⚠️ 提交失敗");
+            btn.disabled = false;
+            btn.innerText = "確認下單並提交";
+        }
+    }
+
+    // 讀取匯總
+    async function fetchRecords() {
+        const listDiv = document.getElementById('records-list');
+        const loading = document.getElementById('loading');
+        loading.style.display = "block";
+        listDiv.innerHTML = "";
+
+        try {
+            const response = await fetch(SCRIPT_URL + "?action=read");
+            const data = await response.json();
+            loading.style.display = "none";
+
+            if(!data || data.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center;'>目前還沒人下單喔</p>";
+                return;
+            }
+
+            // 按桌號排序
+            data.sort((a, b) => parseInt(a.table) - parseInt(b.table));
+
+            let curTable = "";
+            let tabTotal = 0;
+            let html = "";
+
+            data.forEach((r, i) => {
+                if (curTable !== "" && curTable !== r.table) {
+                    html += `<div class="table-total"><span>${curTable} 小計</span><span>$${tabTotal}</span></div>`;
+                    tabTotal = 0;
+                }
+                curTable = r.table;
+                tabTotal += parseInt(r.total) || 0;
+                html += `
+                    <div class="record-card">
+                        <div style="font-weight:bold; color:#4a90e2; margin-bottom:5px;">${r.table} - ${r.name}</div>
+                        <div style="font-size:14px; color:#64748b;">${r.details}</div>
+                        <div style="text-align:right; font-weight:bold;">$${r.total}</div>
+                    </div>`;
+                if (i === data.length - 1) {
+                    html += `<div class="table-total"><span>${curTable} 小計</span><span>$${tabTotal}</span></div>`;
+                }
+            });
+            listDiv.innerHTML = html;
+        } catch (e) {
+            loading.innerText = "讀取失敗，請重新整理網頁。";
+        }
+    }
+</script>
+</body>
+</html>
