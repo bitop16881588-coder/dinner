@@ -11,44 +11,44 @@
         .tab.active { background: #4a90e2; color: white; }
         .page { display: none; padding: 20px; }
         .page.active { display: block; }
-        .card { background: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .category-title { color: #1e3a8a; font-weight: bold; margin: 20px 0 10px 5px; }
-        .food-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; }
-        .btn-main { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 15px; font-weight: bold; }
+        .food-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; }
+        .btn-main { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 10px; }
         .stepper { display: flex; align-items: center; gap: 10px; }
-        button { background: #4a90e2; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; }
+        button { background: #4a90e2; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="tabs">
-    <div class="tab active" onclick="go(0, this)">🏠 設定/匯總</div>
-    <div class="tab" onclick="go(1, this)">🍲 點餐</div>
+    <div class="tab active" onclick="go(0, this)">🏠 設定與匯總</div>
+    <div class="tab" onclick="go(1, this)">🍲 點餐清單</div>
 </div>
 
 <div id="p0" class="page active">
     <div class="card">
-        <label>姓名：</label><input type="text" id="n1" oninput="syncName(this)" style="width:100%; padding:8px;">
-        <label style="margin-top:10px; display:block;">桌號：</label>
-        <select id="t1" onchange="syncTable(this)" style="width:100%; padding:8px;">
+        <label>您的姓名：</label><input type="text" id="n1" oninput="syncName(this)" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:10px;">
+        <label>您的桌號：</label>
+        <select id="t1" onchange="syncTable(this)" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:10px;">
             <option>1號桌</option><option>2號桌</option><option>3號桌</option><option>4號桌</option>
         </select>
     </div>
-    <h3>📋 其他人已點餐況</h3>
+    <h3>📋 目前全場點餐進度</h3>
     <div id="records-list"></div>
 </div>
 
 <div id="p1" class="page">
-    <div id="menu-box"></div>
+    <div class="card">姓名同步：<input type="text" id="n2" readonly style="border:none; font-weight:bold;"></div>
+    <div id="menu-box" class="card"></div>
     <button class="btn-main" onclick="send()">送出訂單</button>
 </div>
 
 <script>
     const URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
     const menuData = [
-        { cat: "主食湯底與肉盤", items: [{n:"牛骨湯底",p:450}, {n:"鴛鴦鍋",p:650}] },
-        { cat: "熱炒料理", items: [{n:"蔥爆牛",p:180}, {n:"蔥爆肚",p:180}, {n:"沙茶牛",p:180}, {n:"沙茶肚",p:180}] },
-        { cat: "麻油料理", items: [{n:"麻油心",p:200}, {n:"麻油肝",p:200}] }
+        { cat: "湯底/肉品", items: [{n:"牛骨湯底",p:450}, {n:"鴛鴦鍋",p:650}, {n:"牛肉盤",p:300}] },
+        { cat: "熱炒/麻油", items: [{n:"蔥爆牛",p:180}, {n:"麻油心",p:200}] }
     ];
     let sels = {}, name = "", table = "1號桌", flatMenu = [];
 
@@ -59,9 +59,10 @@
         if(i===0) loadRecords();
     }
 
-    function syncName(el) { name = el.value; }
+    function syncName(el) { name = el.value; document.getElementById('n2').value = name; }
     function syncTable(el) { table = el.value; }
 
+    // 初始化菜單
     const box = document.getElementById('menu-box');
     let idx = 0;
     menuData.forEach(c => {
@@ -89,7 +90,7 @@
         const data = await res.json();
         let html = "";
         data.sort((a,b)=>parseInt(a.table)-parseInt(b.table)).forEach(r => {
-            html += `<div class="card"><b>[${r.table}] ${r.name}</b><br>${r.details}<br>金額: $${r.total}</div>`;
+            html += `<div class="card"><b>[${r.table}] ${r.name}</b><br>${r.details} | 小計: $${r.total}</div>`;
         });
         document.getElementById('records-list').innerHTML = html;
     }
