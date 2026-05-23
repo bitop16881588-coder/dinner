@@ -2,78 +2,103 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>聚餐點餐神器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* 奶油風配色與Q版字體設置 */
-        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
-        body { font-family: 'Comfortaa', sans-serif; background: #fdfbf7; color: #5c4e46; padding: 0; margin: 0; }
-        
-        /* 導覽列 */
-        .tabs { display: flex; background: #f2e9e1; position: sticky; top: 0; z-index: 100; padding: 10px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #a8968a; font-weight: bold; border-radius: 15px; }
-        .tab.active { background: #dcb8a3; color: white; }
+        /* 全域樣式：Q版字體與舒服藍配色 */
+        body { 
+            font-family: 'Comfortaa', "Microsoft JhengHei", sans-serif; 
+            background: #f0f7ff; 
+            color: #2c3e50; 
+            padding: 0; margin: 0; 
+            -webkit-font-smoothing: antialiased;
+        }
 
-        .container { max-width: 500px; margin: auto; padding: 20px; }
-        .page { display: none; }
+        /* 導覽分頁按鈕 */
+        .tabs { 
+            display: flex; 
+            background: #ffffff; 
+            position: sticky; top: 0; z-index: 100; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .tab { 
+            flex: 1; text-align: center; padding: 15px 0; 
+            color: #94a3b8; font-weight: bold; cursor: pointer; 
+            transition: 0.3s; font-size: 14px;
+        }
+        .tab.active { 
+            color: #4a90e2; border-bottom: 4px solid #4a90e2; 
+            background: #f8fbff;
+        }
+
+        .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 150px; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 輸入與卡片 */
-        .card { background: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        select, input { width: 100%; padding: 12px; border: 2px solid #f2e9e1; border-radius: 15px; font-family: inherit; }
-        
-        .food-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        button { background: #dcb8a3; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; }
-        
-        #submit-btn { width: 100%; padding: 15px; background: #dcb8a3; color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; margin-top: 20px; }
-    </style>
-</head>
-<body>
+        /* 卡片樣式 */
+        .card { 
+            background: #ffffff; padding: 20px; border-radius: 25px; 
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.05); 
+            margin-bottom: 15px; border: 2px solid #eef2f7;
+        }
 
-<div class="tabs">
-    <div class="tab active" onclick="show('p1', this)">🏠 桌號</div>
-    <div class="tab" onclick="show('p2', this)">🍲 點餐</div>
-    <div class="tab" onclick="show('p3', this); fetchRecords()">📊 匯總</div>
-</div>
+        /* 表單元素 */
+        label { font-weight: bold; display: block; margin-bottom: 10px; color: #4a90e2; }
+        input[type="text"], select { 
+            width: 100%; padding: 12px; border: 2px solid #e2e8f0; 
+            border-radius: 15px; font-size: 16px; box-sizing: border-box;
+            background: #fcfdfe; font-family: inherit;
+        }
 
-<div class="container">
-    <div id="p1" class="page active card">
-        <label>請選擇桌號：</label>
-        <select id="table-num">
-            <option>1號桌</option><option>2號桌</option><option>3號桌</option>
-        </select>
-    </div>
+        /* 桌號選擇瓷磚 */
+        .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .table-option { 
+            background: #f8fafc; border: 2px solid #e2e8f0; 
+            padding: 15px 5px; border-radius: 15px; text-align: center;
+            cursor: pointer; transition: 0.2s; font-weight: bold;
+        }
+        .table-option.selected { 
+            background: #4a90e2; color: white; border-color: #4a90e2;
+            transform: scale(1.05);
+        }
 
-    <div id="p2" class="page">
-        <div class="card"><input type="text" id="user-name" placeholder="請輸入姓名"></div>
-        <div id="menu-list" class="card"></div>
-        <button id="submit-btn" onclick="submitOrder()">確認送出</button>
-    </div>
+        /* 菜單卡片 */
+        .category-title { color: #1e3a8a; margin: 25px 0 10px 5px; font-weight: bold; }
+        .food-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px dashed #edf2f7;
+        }
+        .food-name { font-weight: bold; font-size: 15px; }
+        .food-price { color: #94a3b8; font-size: 13px; }
 
-    <div id="p3" class="page">
-        <div id="records-list"></div>
-    </div>
-</div>
+        /* 加減器 */
+        .stepper { display: flex; align-items: center; background: #f1f5f9; border-radius: 50px; padding: 2px 8px; }
+        .stepper button { 
+            background: #4a90e2; color: white; border: none; 
+            width: 28px; height: 28px; border-radius: 50%; 
+            cursor: pointer; font-weight: bold; font-size: 18px;
+        }
+        .stepper input { 
+            width: 30px; text-align: center; border: none; 
+            background: transparent; font-weight: bold; font-size: 15px;
+        }
 
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzs7lmm2_bW40laYkVB3fIu9-qwXz9o4He-n9iXbMZSrj78jPiyOYLQ1nnxXkZewAyI1Q/exec";
-    
-    // 渲染選單
-    const menu = [{name: "牛肉盤", price: 300}, {name: "豬肉盤", price: 150}, {name: "台啤", price: 60}];
-    const list = document.getElementById('menu-list');
-    menu.forEach((item, i) => {
-        list.innerHTML += `<div class="food-item">${item.name} ($${item.price}) 
-            <div class="stepper"><button onclick="add(${i},-1)">-</button><input id="q-${i}" value="0"><button onclick="add(${i},1)">+</button></div>
-        </div>`;
-    });
+        /* 統計明細 */
+        .record-card { background: white; padding: 15px; border-radius: 20px; margin-bottom: 8px; border-left: 5px solid #4a90e2; }
+        .table-total { 
+            background: #e0f2fe; padding: 10px 15px; border-radius: 15px; 
+            margin: 20px 0; font-weight: bold; color: #0369a1;
+            display: flex; justify-content: space-between;
+        }
 
-    function show(id, tab) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        tab.classList.add('active');
-    }
-
-    // 這裡放入點餐與提交邏輯...
-</script>
-</body>
-</html>
+        /* 底部固定結帳 */
+        #footer { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+            padding: 15px 20px; border-top: 1px solid #e2e8f0; text-align: center;
+        }
+        .btn-submit { 
+            background: #4a90e2; color: white; border: none; 
+            padding: 15px; border-radius: 18px; width: 100
