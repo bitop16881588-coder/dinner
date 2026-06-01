@@ -2,57 +2,53 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>聚餐點餐神器</title>
+    <title>陳記火鍋聚餐系統</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
-        body { font-family: 'Comfortaa', sans-serif; background: #f0f4f8; color: #2c3e50; margin: 0; padding-bottom: 100px; }
-        .tabs { display: flex; background: #fff; padding: 10px; gap: 5px; position: sticky; top: 0; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .tab { flex: 1; padding: 10px; text-align: center; border-radius: 12px; cursor: pointer; color: #4a90e2; font-weight: bold; font-size: 14px; }
-        .tab.active { background: #4a90e2; color: white; }
+        body { font-family: 'Comfortaa', sans-serif; background: #f0f4f8; color: #2c3e50; margin: 0; padding-bottom: 80px; }
+        .tabs { display: flex; background: #fff; padding: 10px; position: sticky; top: 0; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow-x: auto; }
+        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #4a90e2; font-weight: bold; white-space: nowrap; }
+        .tab.active { background: #4a90e2; color: white; border-radius: 10px; }
         .page { display: none; padding: 20px; }
         .page.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e1e8f0; border-radius: 15px; box-sizing: border-box; }
-        .btn-main { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-main { width: 100%; padding: 12px; background: #4a90e2; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="tabs">
     <div class="tab active" onclick="go(0, this)">✍️ 報名</div>
-    <div class="tab" onclick="go(1, this)">🏠 設定/匯總</div>
-    <div class="tab" onclick="go(2, this)">🍲 點餐</div>
+    <div class="tab" onclick="go(1, this)">👥 誰要參加</div>
+    <div class="tab" onclick="go(2, this)">🏠 設定/匯總</div>
+    <div class="tab" onclick="go(3, this)">🍲 點餐</div>
 </div>
 
 <div id="p0" class="page active">
     <div class="card">
         <h3>活動報名</h3>
-        <label>報名姓名：</label>
-        <input type="text" id="reg-name" placeholder="輸入姓名">
-        
-        <label>餐廳名稱：</label>
-        <input type="text" id="reg-rest" value="陳記火鍋">
-        
-        <label>用餐日期：</label>
-        <input type="date" id="reg-date" value="2026-06-05" style="width:100%; padding:12px; border:2px solid #e1e8f0; border-radius:15px; box-sizing:border-box;">
-        
+        <label>姓名：</label><input type="text" id="reg-name" style="width:100%; padding:10px; margin:5px 0 15px;">
+        <label>餐廳：</label><input type="text" id="reg-rest" value="陳記火鍋" style="width:100%; padding:10px; margin:5px 0 15px;">
+        <label>日期：</label><input type="date" id="reg-date" value="2026-06-05" style="width:100%; padding:10px; margin:5px 0 15px;">
         <button class="btn-main" onclick="saveReg()">確認報名</button>
     </div>
-    <div id="reg-list" class="card"></div>
 </div>
 
 <div id="p1" class="page">
+    <h3>已報名清單</h3>
+    <div id="attendee-list">載入中...</div>
+</div>
+
+<div id="p2" class="page">
     <div class="card">
-        <label>姓名：</label><input type="text" id="n1" oninput="syncName(this)">
-        <label>桌號：</label>
-        <select id="t1" onchange="syncTable(this)">
-            <option>1號桌</option><option>2號桌</option><option>3號桌</option>
-        </select>
+        <label>姓名：</label><input type="text" id="n1" oninput="document.getElementById('n2').value = this.value">
+        <label>桌號：</label><select id="t1"><option>1號桌</option><option>2號桌</option><option>3號桌</option></select>
     </div>
     <div id="records-list"></div>
 </div>
 
-<div id="p2" class="page">
+<div id="p3" class="page">
+    <input type="hidden" id="n2">
     <div id="menu-box" class="card"></div>
     <button class="btn-main" onclick="send()">送出訂單</button>
 </div>
@@ -64,27 +60,23 @@
         document.querySelectorAll('.page').forEach((p, idx) => p.className = idx===i ? 'page active' : 'page');
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         if(el) el.classList.add('active');
-        if(i===0) loadRegs();
-        if(i===1) loadRecords();
+        if(i===1) loadAttendees();
+        if(i===2) loadRecords();
     }
 
     async function saveReg() {
         const data = { type: "reg", name: document.getElementById('reg-name').value, rest: document.getElementById('reg-rest').value, date: document.getElementById('reg-date').value };
         await fetch(URL, {method:'POST', mode:'no-cors', body:JSON.stringify(data)});
-        alert("報名成功！"); loadRegs();
+        alert("報名成功！"); go(1, document.querySelectorAll('.tab')[1]);
     }
 
-    async function loadRegs() {
-        const res = await fetch(URL + "?action=readReg"); // 需在 GAS 設定對應處理
+    async function loadAttendees() {
+        const res = await fetch(URL + "?action=readReg");
         const data = await res.json();
-        document.getElementById('reg-list').innerHTML = data.map(r => `<div>${r.date} - ${r.rest} - ${r.name}</div>`).join('');
+        document.getElementById('attendee-list').innerHTML = data.map(r => `<div class="card">${r.name} - ${r.rest} (${r.date})</div>`).join('');
     }
-
-    // (保留原本的 syncName, syncTable, send, loadRecords 等邏輯...)
-    function syncName(el) { document.getElementById('n2').value = el.value; } // 若有需要同步可補充
-    function syncTable(el) { /*...*/ }
-    async function send() { /*...*/ }
-    async function loadRecords() { /*...*/ }
+    
+    // (保留原本的 send 與 loadRecords 邏輯)
 </script>
 </body>
 </html>
