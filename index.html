@@ -2,67 +2,50 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聚餐點餐統計</title>
+    <title>聚餐點餐神器</title>
     <style>
-        /* 保留您原本的優雅藍色調樣式 */
-        body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f4f8; color: #2c3e50; padding: 0; margin: 0; }
-        .tabs { display: flex; background: #dbe4ee; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(44, 62, 80, 0.05); }
-        .tab { flex: 1; text-align: center; padding: 16px 0; color: #607d8b; font-weight: bold; cursor: pointer; opacity: 0.8; font-size: 15px; transition: all 0.3s; }
-        .tab.active { opacity: 1; color: #1e3a8a; border-bottom: 4px solid #4a90e2; background: rgba(255,255,255,0.5); font-size: 16px; }
-        .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 150px; box-sizing: border-box; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f4f8; padding: 20px; }
+        .tabs { display: flex; background: #dbe4ee; position: sticky; top: 0; z-index: 100; border-radius: 15px; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #607d8b; font-weight: bold; }
+        .tab.active { background: #4a90e2; color: white; border-radius: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-        .input-group { margin-bottom: 16px; background: #ffffff; padding: 16px; border-radius: 20px; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.03); border: 2px solid #e1e8f0; }
-        .btn-submit { background: #4a90e2; color: white; border: none; padding: 14px; border-radius: 16px; font-weight: bold; font-size: 18px; width: 100%; cursor: pointer; }
+        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .btn { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
-
-<div class="tabs">
-    <div class="tab active" onclick="switchPage('page-reg', this)">✍️ 活動報名</div>
-    <div class="tab" onclick="switchPage('page-menu', this)">🍲 我要點餐</div>
-    <div class="tab" onclick="switchPage('page-records', this); fetchRecords();">📊 點餐匯總</div>
-</div>
-
-<div class="container">
-    <div id="page-reg" class="page active">
-        <div class="input-group">
-            <label>報名姓名</label>
-            <input type="text" id="reg-name" placeholder="輸入您的名字">
-            <label style="margin-top:15px;">餐廳</label>
-            <input type="text" id="reg-rest" value="陳記火鍋" readonly>
-            <label style="margin-top:15px;">日期</label>
-            <input type="text" id="reg-date" value="2026-06-05" readonly>
-            <button class="btn-submit" style="margin-top:20px;" onclick="submitReg()">確認參加</button>
+    <div class="tabs">
+        <div class="tab active" onclick="go(0, this)">✍️ 報名</div>
+        <div class="tab" onclick="go(1, this)">🍲 點餐</div>
+        <div class="tab" onclick="go(2, this); fetchRecords();">📊 匯總</div>
+    </div>
+    
+    <div id="p0" class="page active">
+        <div class="card">
+            <h3>活動報名</h3>
+            <input type="text" id="reg-name" placeholder="您的姓名" style="width:100%; padding:10px; margin-bottom:10px;">
+            <button class="btn" onclick="submitReg()">送出報名</button>
         </div>
-        <h3 style="text-align:center;">👥 誰要參加？</h3>
-        <div id="reg-list" class="record-card">載入名單中...</div>
+        <div class="card" id="reg-list">載入名單中...</div>
     </div>
 
-    <div id="page-menu" class="page">
-        </div>
+    <div id="p1" class="page">...點餐內容...</div>
 
-    <div id="page-records" class="page">
-        </div>
-</div>
+    <div id="p2" class="page"><div id="records-list"></div></div>
 
-<script>
-    // 切換頁面函式
-    window.switchPage = function(pageId, tabElement) {
-        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(pageId).style.display = 'block';
-        tabElement.classList.add('active');
-    };
-
-    // 報名提交
-    async function submitReg() {
-        const name = document.getElementById('reg-name').value;
-        if(!name) return alert("請輸入姓名");
-        // 這裡填入您對應「報名清單」的 GAS 網址
-        alert("報名成功！");
-    }
-</script>
+    <script>
+        const SCRIPT_URL = "填入你的部署連結";
+        function go(i, el) {
+            document.querySelectorAll('.page').forEach((p, idx) => p.style.display = (idx===i ? 'block' : 'none'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+        async function submitReg() {
+            const name = document.getElementById('reg-name').value;
+            await fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({type:'reg', name:name})});
+            alert('報名成功'); location.reload();
+        }
+    </script>
 </body>
 </html>
