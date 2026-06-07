@@ -5,46 +5,54 @@
     <title>聚餐點餐神器</title>
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f4f8; padding: 20px; }
-        .tabs { display: flex; background: #dbe4ee; position: sticky; top: 0; z-index: 100; border-radius: 15px; margin-bottom: 20px; }
+        .tabs { display: flex; background: #dbe4ee; border-radius: 15px; margin-bottom: 20px; }
         .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #607d8b; font-weight: bold; }
         .tab.active { background: #4a90e2; color: white; border-radius: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="tabs">
         <div class="tab active" onclick="go(0, this)">✍️ 報名</div>
-        <div class="tab" onclick="go(1, this)">🍲 點餐</div>
-        <div class="tab" onclick="go(2, this); fetchRecords();">📊 匯總</div>
+        <div class="tab" onclick="go(1, this)">📊 誰要參加</div>
     </div>
     
     <div id="p0" class="page active">
         <div class="card">
             <h3>活動報名</h3>
-            <input type="text" id="reg-name" placeholder="您的姓名" style="width:100%; padding:10px; margin-bottom:10px;">
-            <button class="btn" onclick="submitReg()">送出報名</button>
+            <input type="text" id="reg-name" placeholder="請輸入姓名" style="width:100%; padding:10px; margin-bottom:10px;">
+            <button class="btn" onclick="submitReg()">確認參加</button>
         </div>
-        <div class="card" id="reg-list">載入名單中...</div>
     </div>
 
-    <div id="p1" class="page">...點餐內容...</div>
-
-    <div id="p2" class="page"><div id="records-list"></div></div>
+    <div id="p1" class="page">
+        <div class="card" id="reg-list">正在載入名單...</div>
+    </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQgekqSVvdxyqKZVSHUSCu5QFjh3HlbaWWuHnloe9hBITy0klT8ElP7dkR9dNThxUJSw/exec";
+
         function go(i, el) {
             document.querySelectorAll('.page').forEach((p, idx) => p.style.display = (idx===i ? 'block' : 'none'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
+            if(i === 1) fetchRegs();
         }
+
         async function submitReg() {
             const name = document.getElementById('reg-name').value;
-            await fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({type:'reg', name:name})});
-            alert('報名成功'); location.reload();
+            if(!name) return alert("請輸入姓名");
+            await fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({type:'reg', name:name, rest:'陳記火鍋', date:'2026-06-05'})});
+            alert('報名成功！'); location.reload();
+        }
+
+        async function fetchRegs() {
+            const res = await fetch(SCRIPT_URL + "?action=readReg");
+            const data = await res.json();
+            document.getElementById('reg-list').innerHTML = data.map(r => `<div>${r[0]} - ${r[1]} (${r[2]})</div>`).join('<hr>');
         }
     </script>
 </body>
